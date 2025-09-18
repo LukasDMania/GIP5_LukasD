@@ -1,10 +1,9 @@
 package be.ucll.application.setup;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.stream.IntStream;
-
+import be.ucll.domain.model.Role;
+import be.ucll.domain.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -12,7 +11,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 public class InitialDataSetup {
@@ -20,23 +20,38 @@ public class InitialDataSetup {
 	@Autowired
 	private PlatformTransactionManager platformTransactionManager;
 
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
 	@PersistenceContext
 	private EntityManager entityManager;
 
 	@PostConstruct
 	public void setup() {
 		TransactionTemplate transactionTemplate = new TransactionTemplate(platformTransactionManager);
-		transactionTemplate.execute(e -> {
+		transactionTemplate.execute(status -> {
 
-			IntStream.range(0, 5).forEach(value -> {
-				TestEntity testEntity = new TestEntity();
-				testEntity.setValue("This is value nr " + value + " created at " + new SimpleDateFormat().format(new Date()));
-				entityManager.persist(testEntity);
-			});
+			// --- Create Roles ---
+			Role userRole = new Role("ROLE_USER");
+			Role managerRole = new Role("ROLE_MANAGER");
 
-			/**
-			 * Hier kan je meer data setup in plaatsen van het moment je datamodel klaar is
-			 */
+			entityManager.persist(userRole);
+			entityManager.persist(managerRole);
+
+			// --- Create Users ---
+			User normalUser = new User();
+			normalUser.setUsername("john");
+			normalUser.setPassword(passwordEncoder.encode("password123"));
+			normalUser.setEmail("john@example.com");
+			normalUser.setRoles(Set.of(userRole));
+			entityManager.persist(normalUser);
+
+			User manager = new User();
+			manager.setUsername("alice");
+			manager.setPassword(passwordEncoder.encode("admin123"));
+			manager.setEmail("alice@example.com");
+			manager.setRoles(new HashSet<>(Set.of(userRole, managerRole)));
+			entityManager.persist(manager);
 
 			return null;
 		});

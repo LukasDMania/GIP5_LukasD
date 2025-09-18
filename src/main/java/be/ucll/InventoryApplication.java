@@ -1,4 +1,4 @@
-package be.ucll.application;
+package be.ucll;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
