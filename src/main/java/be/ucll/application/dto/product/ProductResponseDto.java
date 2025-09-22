@@ -2,21 +2,19 @@ package be.ucll.application.dto.product;
 
 import java.time.LocalDateTime;
 
-public class ProductResponse {
+public class ProductResponseDto {
     private Long id;
     private String name;
     private int stock;
     private String description;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
-    public ProductResponse(Long id, String name, int stock, String description, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ProductResponseDto(Long id, String name, int stock, String description, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.stock = stock;
         this.description = description;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
@@ -52,12 +50,5 @@ public class ProductResponse {
     }
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

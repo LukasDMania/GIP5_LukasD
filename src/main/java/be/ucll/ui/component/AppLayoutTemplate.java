@@ -29,10 +29,10 @@ public class AppLayoutTemplate extends VerticalLayout {
                 .set("border-bottom", "1px solid #ccc");
 
         //TODO: add actual site image
-        Image logo = new Image("https://dummyimage.com/100x40/000/fff&text=MyShop", "Logo");
+        Image logo = new Image("https://dummyimage.com/100x40/000/fff&text=MyStock", "Logo");
         logo.setHeight("40px");
 
-        Span title = new Span("Order Lookup System LD");
+        Span title = new Span("Stock Lookup System LD");
         title.getStyle()
                 .set("margin-left", "1rem")
                 .set("font-weight", "bold");
@@ -45,7 +45,7 @@ public class AppLayoutTemplate extends VerticalLayout {
     private Component buildFooter() {
         Div footer = new Div();
         footer.setSizeFull();
-        footer.setText("©My Order System. Do not reuse without permission");
+        footer.setText("©My Stock System. Do not reuse without permission");
         footer.getStyle()
                 .set("background", "#f0f0f0")
                 .set("padding", "0.5rem")

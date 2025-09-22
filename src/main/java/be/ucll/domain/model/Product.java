@@ -23,8 +23,6 @@ public class Product {
     @Column(nullable = false)
     public LocalDateTime createdAt;
 
-    public LocalDateTime updatedAt;
-
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -36,6 +34,9 @@ public class Product {
 
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
 
 

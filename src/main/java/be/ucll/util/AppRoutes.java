@@ -1,0 +1,10 @@
+package be.ucll.util;
+
+import com.vaadin.flow.component.Component;
+
+public class AppRoutes {
+    public static final String LOGIN_VIEW = "login";
+    public static final String DASHBOARD_VIEW = "dashboard";
+
+    private AppRoutes(){}
+}

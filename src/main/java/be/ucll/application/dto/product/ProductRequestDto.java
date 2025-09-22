@@ -3,7 +3,7 @@ package be.ucll.application.dto.product;
 import jakarta.validation.constraints.Min;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
 
-public class ProductRequest {
+public class ProductRequestDto {
     @NotBlank
     private String name;
 
@@ -12,12 +12,12 @@ public class ProductRequest {
 
     private String description;
 
-    public ProductRequest(String name, int initialStock, String description) {
+    public ProductRequestDto(String name, int initialStock, String description) {
         this.name = name;
         this.initialStock = initialStock;
         this.description = description;
     }
-    public ProductRequest(String name, int initialStock) {
+    public ProductRequestDto(String name, int initialStock) {
         this.name = name;
         this.initialStock = initialStock;
     }

@@ -1,21 +1,19 @@
 package be.ucll.application.dto.stockadjustment;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
-public class StockAdjustmentRequest {
-    @NotNull
+public class StockAdjustmentResponseDto {
+    private Long adjustmentId;
     private Long productId;
-
     private int delta;
-
-    @NotBlank
     private String performedByUsername;
+    private LocalDateTime timestamp;
 
-    public StockAdjustmentRequest(Long productId, int delta, String performedByUsername) {
-        this.productId = productId;
-        this.delta = delta;
-        this.performedByUsername = performedByUsername;
+    public Long getAdjustmentId() {
+        return adjustmentId;
+    }
+    public void setAdjustmentId(Long adjustmentId) {
+        this.adjustmentId = adjustmentId;
     }
 
     public Long getProductId() {
@@ -37,5 +35,12 @@ public class StockAdjustmentRequest {
     }
     public void setPerformedByUsername(String performedByUsername) {
         this.performedByUsername = performedByUsername;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 }
