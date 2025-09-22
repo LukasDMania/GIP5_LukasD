@@ -1,5 +1,6 @@
 package be.ucll.security;
 
+import be.ucll.ui.view.LoginView;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +27,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 
         super.configure(http);
 
-        //TODO: setloginview
-        //setLoginView(http, LoginView.class);
+        setLoginView(http, LoginView.class);
     }
 
     @Bean

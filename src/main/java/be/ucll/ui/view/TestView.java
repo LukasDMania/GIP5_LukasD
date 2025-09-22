@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Route("test")
 @PermitAll
-@AnonymousAllowed
 public class TestView extends VerticalLayout {
 
     @Autowired

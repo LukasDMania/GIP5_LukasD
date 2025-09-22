@@ -31,14 +31,12 @@ public class InitialDataSetup {
 		TransactionTemplate transactionTemplate = new TransactionTemplate(platformTransactionManager);
 		transactionTemplate.execute(status -> {
 
-			// --- Create Roles ---
 			Role userRole = new Role("ROLE_USER");
 			Role managerRole = new Role("ROLE_MANAGER");
 
 			entityManager.persist(userRole);
 			entityManager.persist(managerRole);
 
-			// --- Create Users ---
 			User normalUser = new User();
 			normalUser.setUsername("john");
 			normalUser.setPassword(passwordEncoder.encode("password123"));
