@@ -2,6 +2,7 @@ package be.ucll.application.setup;
 
 import be.ucll.domain.model.Role;
 import be.ucll.domain.model.User;
+import be.ucll.util.RoleConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -31,11 +32,13 @@ public class InitialDataSetup {
 		TransactionTemplate transactionTemplate = new TransactionTemplate(platformTransactionManager);
 		transactionTemplate.execute(status -> {
 
-			Role userRole = new Role("ROLE_USER");
-			Role managerRole = new Role("ROLE_MANAGER");
+			Role userRole = new Role(RoleConstants.ROLE_USER);
+			Role managerRole = new Role(RoleConstants.ROLE_MANAGER);
+			Role adminRole = new Role(RoleConstants.ROLE_ADMIN);
 
 			entityManager.persist(userRole);
 			entityManager.persist(managerRole);
+			entityManager.persist(adminRole);
 
 			User normalUser = new User();
 			normalUser.setUsername("john");

@@ -1,4 +1,4 @@
-package be.ucll.domain.service;
+package be.ucll.domain.service.impl;
 
 import be.ucll.domain.model.User;
 import be.ucll.domain.repository.UserRepository;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserServiceImpl implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;

@@ -2,6 +2,8 @@ package be.ucll.domain.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "products")
 public class Product {
@@ -18,6 +20,11 @@ public class Product {
     @Column(nullable = false)
     private int stock;
 
+    @Column(nullable = false)
+    public LocalDateTime createdAt;
+
+    public LocalDateTime updatedAt;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -29,6 +36,8 @@ public class Product {
 
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
+
+
 
     public void increaseStock(int amount) { this.stock+= amount; }
     public void decreaseStock(int amount) { this.stock-= amount; }

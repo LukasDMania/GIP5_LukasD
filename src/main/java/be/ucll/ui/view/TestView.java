@@ -1,12 +1,11 @@
 package be.ucll.ui.view;
 
 import be.ucll.domain.model.User;
-import be.ucll.domain.service.UserService;
+import be.ucll.domain.service.impl.UserServiceImpl;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class TestView extends VerticalLayout {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
     private Grid<User> grid;
 
