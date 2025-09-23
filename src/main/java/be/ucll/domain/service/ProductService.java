@@ -13,6 +13,7 @@ public interface ProductService {
     ProductResponseDto findById(Long id);
     ProductResponseDto createProduct(ProductRequestDto request, String performedByUsername);
     ProductResponseDto updateProduct(ProductUpdateRequestDto request, String performedByUsername);
-    void deleteProduct(Long id, String performedByUsername);
+    void deleteProduct(Long id);
+    List<String> autocompleteProductNames(String prefix);
     StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto request);
 }

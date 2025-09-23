@@ -35,4 +35,13 @@ public class SearchCriteriaDto {
     public void setCreatedAfter(LocalDateTime createdAfter) {
         this.createdAfter = createdAfter;
     }
+
+
+    public boolean hasAtLeastOneCriteria() {
+        if (minStock > 0 ) {return true;}
+        if (maxStock > 0 ) {return true;}
+        if (productName != null && !productName.trim().isEmpty()) {return true;}
+        if (createdAfter != null) {return true;}
+        return false;
+    }
 }

@@ -3,10 +3,13 @@ package be.ucll.domain.service.impl;
 import be.ucll.application.dto.product.ProductRequestDto;
 import be.ucll.application.dto.product.ProductResponseDto;
 import be.ucll.application.dto.product.ProductUpdateRequestDto;
+import be.ucll.application.dto.stockadjustment.StockAdjustmentRequestDto;
+import be.ucll.application.dto.stockadjustment.StockAdjustmentResponseDto;
 import be.ucll.application.mapper.product.ProductMapper;
 import be.ucll.domain.model.Product;
 import be.ucll.domain.model.User;
 import be.ucll.domain.repository.ProductRepository;
+import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.StockAdjustmentService;
 import be.ucll.domain.service.UserService;
 import be.ucll.exception.DataIntegrityException;
@@ -20,10 +23,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class ProductServiceImpl {
+public class ProductServiceImpl implements ProductService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProductServiceImpl.class);
 
@@ -123,4 +127,17 @@ public class ProductServiceImpl {
         productRepository.deleteById(id);
     }
 
+    public List<String> autocompleteProductNames(String prefix) {
+        List<Product> productList = productRepository.findNameByNameStartingWithIgnoreCase(prefix);
+        List<String> produktNameList = new ArrayList<>();
+        for (Product product : productList) {
+            produktNameList.add(product.getName());
+        }
+        return produktNameList;
+    }
+
+    @Override
+    public StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto request) {
+        return null;
+    }
 }

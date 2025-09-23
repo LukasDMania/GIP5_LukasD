@@ -1,7 +1,9 @@
 package be.ucll.domain.service.impl;
 
 import be.ucll.application.dto.SearchCriteriaDto;
+import be.ucll.application.events.SearchHistoryChangedEvent;
 import com.vaadin.flow.server.VaadinSession;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -15,6 +17,11 @@ public class SearchHistoryService {
     private static final String SEARCH_HISTORY_SESSION_KEY = "searchHistory";
     private static final int MAX_HISTORY_SIZE = 5;
 
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    public SearchHistoryService(ApplicationEventPublisher applicationEventPublisher) {
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
 
     public void addToHistory(SearchCriteriaDto criteria) {
         LinkedList<SearchCriteriaDto> history = (LinkedList<SearchCriteriaDto>)
@@ -45,6 +52,7 @@ public class SearchHistoryService {
         VaadinSession.getCurrent().setAttribute(SEARCH_HISTORY_SESSION_KEY, history);
 
         //TODO: fire history changed event
+        applicationEventPublisher.publishEvent(new SearchHistoryChangedEvent());
     }
 
     public LinkedList<SearchCriteriaDto> loadHistory() {
@@ -64,14 +72,28 @@ public class SearchHistoryService {
             labelBuilder.append(formatter.format(criteria.getCreatedAfter())).append(": ");
         }
 
-        //TODO : fix this to fit my current data model
         List<String> parts = new LinkedList<>();
-        Optional.ofNullable(criteria.getMinAmount()).map(v -> "Min bedrag: " + v).ifPresent(parts::add);
-        Optional.ofNullable(criteria.getMaxAmount()).map(v -> "Max bedrag: " + v).ifPresent(parts::add);
-        Optional.ofNullable(criteria.getProductCount()).map(v -> "Aantal prod: " + v).ifPresent(parts::add);
-        Optional.ofNullable(criteria.getProductName()).filter(s -> !s.isBlank()).map(v -> "Product: " + v).ifPresent(parts::add);
-        Optional.ofNullable(criteria.getEmail()).filter(s -> !s.isBlank()).map(v -> "Email: " + v).ifPresent(parts::add);
-        Optional.ofNullable(criteria.isDeliveredNullable()).map(v -> "Afgeleverd: " + (v ? "Ja" : "Nee")).ifPresent(parts::add);
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+
+        Optional.ofNullable(criteria.getMinStock())
+                .filter(v -> v > 0)
+                .map(v -> "Min stock: " + v)
+                .ifPresent(parts::add);
+
+        Optional.ofNullable(criteria.getMaxStock())
+                .filter(v -> v > 0)
+                .map(v -> "Max stock: " + v)
+                .ifPresent(parts::add);
+
+        Optional.ofNullable(criteria.getProductName())
+                .filter(s -> !s.isBlank())
+                .map(v -> "Product: " + v)
+                .ifPresent(parts::add);
+
+        Optional.ofNullable(criteria.getCreatedAfter())
+                .map(date -> "Created after: " + date.format(dateFormatter))
+                .ifPresent(parts::add);
 
         if (parts.isEmpty()) {
             return "Empty search history";
