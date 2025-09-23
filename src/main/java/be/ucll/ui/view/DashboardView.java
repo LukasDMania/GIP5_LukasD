@@ -1,6 +1,11 @@
 package be.ucll.ui.view;
 
 import be.ucll.application.dto.SearchCriteriaDto;
+import be.ucll.application.dto.product.ProductResponseDto;
+import be.ucll.application.events.ClearRequestedEvent;
+import be.ucll.application.events.SearchHistoryChangedEvent;
+import be.ucll.application.events.SearchRequestedEvent;
+import be.ucll.application.mapper.product.ProductMapper;
 import be.ucll.domain.model.Product;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.impl.SearchHistoryService;
@@ -9,6 +14,7 @@ import be.ucll.ui.component.ProductGrid;
 import be.ucll.ui.component.SearchForm;
 import be.ucll.util.AppRoutes;
 import be.ucll.util.RoleConstants;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -19,7 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 
+import java.util.Collections;
 import java.util.List;
 
 @Route(AppRoutes.DASHBOARD_VIEW)
@@ -69,7 +77,34 @@ public class DashboardView extends AppLayoutTemplate {
 
         if (savedCriteria != null && savedResults != null) {
             searchForm.loadCriteria(savedCriteria);
-            productGrid.setItems(savedResults);
+            productGrid.setItems();
         }
+    }
+
+    @EventListener
+    public void onSearchRequested(SearchRequestedEvent event) {
+        List<ProductResponseDto> productResponseDtos = productService.searchProductsByCriteria(event.searchCriteriaDto());
+        productGrid.setItems(productResponseDtos);
+
+        searchHistoryService.addToHistory(event.searchCriteriaDto());
+
+        VaadinSession.getCurrent().setAttribute("lastSearchCriteria", event.searchCriteriaDto());
+        VaadinSession.getCurrent().setAttribute("lastSearchResults", productResponseDtos);
+
+        if (productResponseDtos.isEmpty()) {
+            Notification.show("Geen resultaten gevonden.", 3000, Notification.Position.MIDDLE);
+        } else {
+            Notification.show(productResponseDtos.size() + " resultaten gevonden.", 3000, Notification.Position.MIDDLE);
+        }
+    }
+
+    @EventListener
+    public void onClearRequested(ClearRequestedEvent event) {
+        productGrid.setItems(Collections.emptyList());
+    }
+
+    @EventListener
+    public void onSearchHistoryChanged(SearchHistoryChangedEvent event) {
+        searchForm.setHistoryComboBoxItems(searchHistoryService.loadHistory());
     }
 }

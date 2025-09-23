@@ -1,5 +1,6 @@
 package be.ucll.domain.service.impl;
 
+import be.ucll.application.dto.SearchCriteriaDto;
 import be.ucll.application.dto.product.ProductRequestDto;
 import be.ucll.application.dto.product.ProductResponseDto;
 import be.ucll.application.dto.product.ProductUpdateRequestDto;
@@ -16,6 +17,9 @@ import be.ucll.exception.DataIntegrityException;
 import be.ucll.exception.product.ProductAlreadyExistsException;
 import be.ucll.exception.product.ProductNotFoundException;
 import be.ucll.exception.product.ProductUpdateException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +34,9 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProductServiceImpl.class);
+
+    @PersistenceContext
+    private EntityManager em;
 
     private final ProductRepository productRepository;
     private final UserServiceImpl userService;
@@ -50,6 +57,44 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponseDto> findAll() {
         LOG.debug("PRODUCTS findAll()");
         return productRepository.findAll().stream()
+                .map(ProductMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    public List<ProductResponseDto> searchProductsByCriteria(SearchCriteriaDto searchCriteriaDto) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Product> query = cb.createQuery(Product.class);
+        Root<Product> productRoot = query.from(Product.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (searchCriteriaDto.getMinStock() > 0) {
+            predicates.add(cb.ge(productRoot.get("stock"), searchCriteriaDto.getMinStock()));
+        }
+
+        if (searchCriteriaDto.getMaxStock() > 0) {
+            predicates.add(cb.le(productRoot.get("stock"), searchCriteriaDto.getMaxStock()));
+        }
+
+        if (searchCriteriaDto.getProductName() != null && !searchCriteriaDto.getProductName().isBlank()) {
+            predicates.add(
+                    cb.like(
+                            cb.lower(productRoot.get("name")),
+                            "%" + searchCriteriaDto.getProductName().toLowerCase() + "%"
+                    )
+            );
+        }
+
+        if (searchCriteriaDto.getCreatedAfter() != null) {
+            predicates.add(cb.greaterThanOrEqualTo(productRoot.get("createdAt"), searchCriteriaDto.getCreatedAfter()));
+        }
+
+        query.select(productRoot).where(predicates.toArray(new Predicate[0]));
+
+        List<Product> resultList = em.createQuery(query).getResultList();
+
+        return resultList.stream()
                 .map(ProductMapper::toResponseDto)
                 .toList();
     }

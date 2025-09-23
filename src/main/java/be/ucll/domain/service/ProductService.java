@@ -1,5 +1,6 @@
 package be.ucll.domain.service;
 
+import be.ucll.application.dto.SearchCriteriaDto;
 import be.ucll.application.dto.product.ProductRequestDto;
 import be.ucll.application.dto.product.ProductResponseDto;
 import be.ucll.application.dto.product.ProductUpdateRequestDto;
@@ -15,5 +16,6 @@ public interface ProductService {
     ProductResponseDto updateProduct(ProductUpdateRequestDto request, String performedByUsername);
     void deleteProduct(Long id);
     List<String> autocompleteProductNames(String prefix);
+    List<ProductResponseDto> searchProductsByCriteria(SearchCriteriaDto searchCriteriaDto);
     StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto request);
 }
