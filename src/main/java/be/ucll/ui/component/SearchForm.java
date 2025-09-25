@@ -117,7 +117,14 @@ public class SearchForm extends VerticalLayout {
                     return;
                 }
                 //TODO: fire search event
-                applicationEventPublisher.publishEvent(new SearchRequestedEvent(tempCriteria));
+                try {
+                    LOG.info("Firing SearchRequest Event");
+                    applicationEventPublisher.publishEvent(new SearchRequestedEvent(tempCriteria));
+                    LOG.info("Fired SearchResult Event");
+                } catch (Exception e) {
+                    LOG.error("Error publishing SearchRequestedEvent", e);
+                }
+
                 errorLabel.setText("");
             } catch (ValidationException e) {
                 LOG.warn("Search form validation failed", e);

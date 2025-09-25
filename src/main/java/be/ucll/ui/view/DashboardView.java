@@ -14,25 +14,34 @@ import be.ucll.ui.component.ProductGrid;
 import be.ucll.ui.component.SearchForm;
 import be.ucll.util.AppRoutes;
 import be.ucll.util.RoleConstants;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.spring.annotation.UIScope;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Route(AppRoutes.DASHBOARD_VIEW)
 @PageTitle("Login")
-@RolesAllowed({RoleConstants.ROLE_USER, RoleConstants.ROLE_ADMIN})
+@PermitAll
+@Component
 public class DashboardView extends AppLayoutTemplate {
 
     private static final Logger LOG = LoggerFactory.getLogger(DashboardView.class);
@@ -54,9 +63,28 @@ public class DashboardView extends AppLayoutTemplate {
 
     @PostConstruct
     private void init() {
+
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+
+        LOG.info("DashboardView onAttach");
+
         setBody(buildDashboardLayout());
         restoreSession();
         searchForm.setHistoryComboBoxItems(searchHistoryService.loadHistory());
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            System.out.println("User: " + authentication.getName());
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                System.out.println("Role: " + authority.getAuthority());
+            }
+        } else {
+            System.out.println("No authenticated user");
+        }
     }
 
     private VerticalLayout buildDashboardLayout() {
@@ -77,12 +105,19 @@ public class DashboardView extends AppLayoutTemplate {
 
         if (savedCriteria != null && savedResults != null) {
             searchForm.loadCriteria(savedCriteria);
-            productGrid.setItems();
+
+            List<ProductResponseDto> dtos =  new ArrayList<>();
+            for (Product product : savedResults) {
+                dtos.add(ProductMapper.toResponseDto(product));
+            }
+            productGrid.setItems(dtos);
         }
     }
 
     @EventListener
     public void onSearchRequested(SearchRequestedEvent event) {
+        LOG.info("onSearchRequested listener");
+
         List<ProductResponseDto> productResponseDtos = productService.searchProductsByCriteria(event.searchCriteriaDto());
         productGrid.setItems(productResponseDtos);
 

@@ -52,7 +52,7 @@ public class ProductServiceImpl implements ProductService {
         this.userService = userService;
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_USER')")
+    @PreAuthorize("hasAnyRole('MANAGER','USER')")
     @Transactional()
     public List<ProductResponseDto> findAll() {
         LOG.debug("PRODUCTS findAll()");
@@ -61,6 +61,7 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
+    //@PreAuthorize("hasAnyRole('MANAGER','USER')")
     @Override
     public List<ProductResponseDto> searchProductsByCriteria(SearchCriteriaDto searchCriteriaDto) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -99,7 +100,7 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_USER')")
+    @PreAuthorize("hasAnyRole('MANAGER','USER')")
     public ProductResponseDto findById(Long id) {
         LOG.debug("PRODUCTS findById({})", id);
         Product product = productRepository.findById(id)
@@ -107,7 +108,7 @@ public class ProductServiceImpl implements ProductService {
         return ProductMapper.toResponseDto(product);
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @Transactional()
     public ProductResponseDto createProduct(ProductRequestDto productRequest, String performedByUsername) {
         LOG.info("PRODUCTS createProduct({}, {})", performedByUsername, productRequest.getName());
@@ -127,7 +128,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @Transactional()
     public ProductResponseDto updateProduct(ProductUpdateRequestDto productUpdateRequestDto, String performedByUsername) {
         LOG.info("Request to update product id={}", productUpdateRequestDto.getId());
@@ -163,7 +164,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @Transactional
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {

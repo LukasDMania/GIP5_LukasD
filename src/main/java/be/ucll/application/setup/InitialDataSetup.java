@@ -64,7 +64,7 @@ public class InitialDataSetup {
 			List<User> users = generateUsers(10, userRole, managerRole, adminRole);
 			users.forEach(entityManager::persist);
 
-			List<Product> products = generateProducts(50);
+			List<Product> products = generateProducts(5000);
 			products.forEach(entityManager::persist);
 
 			List<StockAdjustment> adjustments = generateStockAdjustments(100, products, users);
