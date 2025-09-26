@@ -149,7 +149,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Transactional()
     public ProductResponseDto updateProduct(ProductUpdateRequestDto productUpdateRequestDto, String performedByUsername) {
         LOG.info("Request to update product id={}", productUpdateRequestDto.getId());

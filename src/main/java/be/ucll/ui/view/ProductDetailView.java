@@ -16,6 +16,8 @@ import be.ucll.ui.component.ProductDetailView.StockAdjustmentGrid;
 import be.ucll.ui.component.ProductDetailView.StockEditorForm;
 import be.ucll.util.AppRoutes;
 import be.ucll.util.NotificationUtil;
+import be.ucll.util.RoleConstants;
+import be.ucll.util.UserUtil;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
@@ -31,7 +33,7 @@ import java.util.Optional;
 
 @Route(AppRoutes.PRODUCT_VIEW)
 @PageTitle("Product Details")
-@RolesAllowed("USER")
+@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER, RoleConstants.ROLE_USER})
 public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterObserver, ViewContractLD {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProductDetailView.class);
@@ -42,6 +44,8 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
     private ProductService productService;
     @Autowired
     private StockAdjustmentService  stockAdjustmentService;
+    @Autowired
+    private UserUtil userUtil;
 
     private ProductDetailCard productDetailCard;
     private StockEditorForm stockEditorForm;
@@ -75,7 +79,7 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
             StockAdjustmentRequestDto req = new StockAdjustmentRequestDto(
                     currentProduct.getId(),
                     event.getDelta(),
-                    getCurrentUser().getUsername()
+                    userUtil.getCurrentUser().getUsername()
             );
             try {
                 StockAdjustmentResponseDto resp = productService.adjustStock(req);
@@ -88,6 +92,10 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
 
         productDetailCard.addBackListener(_ -> {
             getUI().ifPresent(ui -> ui.navigate(AppRoutes.DASHBOARD_VIEW));
+        });
+
+        productDetailCard.addEditListener(_ -> {
+            getUI().ifPresent(ui -> ui.navigate("product/edit/" + currentProduct.getId()));
         });
     }
 
@@ -123,13 +131,4 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
         List<StockAdjustment> adjustmentsOfProduct = stockAdjustmentService.findByProduct(productService.getProductById(currentProduct.getId()));
         stockAdjustmentGrid.setItems(adjustmentsOfProduct);
     }
-
-    public User getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return null;
-
-        String username = auth.getName();
-        return userService.getDomainUserByUsername(username);
-    }
-
 }

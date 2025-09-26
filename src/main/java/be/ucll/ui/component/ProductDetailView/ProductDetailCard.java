@@ -10,6 +10,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.shared.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public class ProductDetailCard extends VerticalLayout {
 
@@ -21,8 +24,7 @@ public class ProductDetailCard extends VerticalLayout {
     private final Span productDescription = new Span();
     private final Span productCreatedAt = new Span();
     private final Button backButton = new Button("Back");
-
-
+    private final Button editButton = new Button("Edit");
 
     public ProductDetailCard() {
         setSizeFull();
@@ -32,8 +34,14 @@ public class ProductDetailCard extends VerticalLayout {
 
         backButton.addClickListener(e -> fireEvent(new BackEvent(this)));
 
-        add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton);
+        if (userHasRole("ROLE_ADMIN") || userHasRole("ROLE_MANAGER")) {
+            editButton.addClickListener(e -> fireEvent(new EditEvent(this)));
+            add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton, editButton);
+        } else {
+            add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton);
+        }
     }
+
 
     public void setProductDetails(ProductResponseDto productResponseDto) {
         productId.setText(productResponseDto.getId().toString());
@@ -43,13 +51,27 @@ public class ProductDetailCard extends VerticalLayout {
         productCreatedAt.setText(productResponseDto.getCreatedAt().toString());
     }
 
+    private boolean userHasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority(role));
+    }
+
+
     public static class BackEvent extends ComponentEvent<ProductDetailCard> {
         public BackEvent(ProductDetailCard source) {
+            super(source, false);
+        }
+    }
+    public static class EditEvent extends ComponentEvent<ProductDetailCard> {
+        public EditEvent(ProductDetailCard source) {
             super(source, false);
         }
     }
 
     public Registration addBackListener(ComponentEventListener<BackEvent> listener) {
         return addListener(BackEvent.class, listener);
+    }
+    public Registration addEditListener(ComponentEventListener<EditEvent> listener) {
+        return addListener(EditEvent.class, listener);
     }
 }

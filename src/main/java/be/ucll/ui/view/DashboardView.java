@@ -28,7 +28,7 @@ import java.util.List;
 
 @Route(AppRoutes.DASHBOARD_VIEW)
 @PageTitle("Login")
-@RolesAllowed({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_USER})
+@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER, RoleConstants.ROLE_USER})
 public class DashboardView extends AppLayoutTemplate implements ViewContractLD{
 
     private static final Logger LOG = LoggerFactory.getLogger(DashboardView.class);
