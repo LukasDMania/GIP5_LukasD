@@ -1,4 +1,4 @@
-package be.ucll.ui.component;
+package be.ucll.ui.component.LoginView;
 
 import be.ucll.application.dto.LoginDto;
 import com.vaadin.flow.component.ComponentEvent;

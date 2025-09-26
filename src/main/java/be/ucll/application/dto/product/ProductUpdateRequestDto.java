@@ -16,7 +16,8 @@ public class ProductUpdateRequestDto {
 
     private String description;
 
-    public ProductUpdateRequestDto(String name, Integer stock, String description) {
+    public ProductUpdateRequestDto(Long id, String name, Integer stock, String description) {
+        this.id = id;
         this.name = name;
         this.stock = stock;
         this.description = description;

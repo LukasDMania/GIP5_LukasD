@@ -4,12 +4,15 @@ import be.ucll.domain.model.Product;
 import be.ucll.domain.model.StockAdjustment;
 import be.ucll.domain.model.User;
 import be.ucll.domain.repository.StockAdjustmentRepository;
+import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.StockAdjustmentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class StockAdjustmentServiceImpl implements StockAdjustmentService {
@@ -27,11 +30,17 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
         stockAdjustment.setAdjustedBy(user);
         stockAdjustment.setDelta(delta);
         stockAdjustment.setTimestamp(LocalDateTime.now());
+        stockAdjustment.setStockAfter(product.getStock());
         StockAdjustment savedStockAdjustment = stockAdjustmentRepository.save(stockAdjustment);
 
         LOG.debug("Recorded stock adjustment id={} productId={} delta={} by={}",
                 savedStockAdjustment.getId(), product.getId(), delta, user.getUsername());
 
         return savedStockAdjustment;
+    }
+
+    @Override
+    public List<StockAdjustment> findByProduct(Product product) {
+        return stockAdjustmentRepository.findByProductOrderByTimestampDesc(product);
     }
 }

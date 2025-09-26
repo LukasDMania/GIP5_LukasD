@@ -1,7 +1,7 @@
-package be.ucll.ui.component;
+package be.ucll.ui.component.DashboardView;
 
 import be.ucll.application.dto.product.ProductResponseDto;
-import be.ucll.domain.model.Product;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 
 import java.util.Collections;
@@ -16,6 +16,14 @@ public class ProductGrid extends Grid<ProductResponseDto> {
         addColumn(ProductResponseDto::getDescription).setHeader("Description");
         addColumn(ProductResponseDto::getStock).setHeader("Amount In Stock");
         addColumn(ProductResponseDto::getCreatedAt).setHeader("Created At");
+
+
+        addComponentColumn(productResponseDto -> {
+            Button detailButton = new Button("Details", event -> {
+                getUI().ifPresent(ui -> ui.navigate("product/" + productResponseDto.getId()));
+            });
+            return detailButton;
+        }).setHeader("Details");
 
         setWidthFull();
         setItems(Collections.emptyList());

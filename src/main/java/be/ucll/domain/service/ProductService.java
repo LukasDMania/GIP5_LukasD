@@ -6,12 +6,14 @@ import be.ucll.application.dto.product.ProductResponseDto;
 import be.ucll.application.dto.product.ProductUpdateRequestDto;
 import be.ucll.application.dto.stockadjustment.StockAdjustmentRequestDto;
 import be.ucll.application.dto.stockadjustment.StockAdjustmentResponseDto;
+import be.ucll.domain.model.Product;
 
 import java.util.List;
 
 public interface ProductService {
     List<ProductResponseDto> findAll();
     ProductResponseDto findById(Long id);
+    Product getProductById(Long id);
     ProductResponseDto createProduct(ProductRequestDto request, String performedByUsername);
     ProductResponseDto updateProduct(ProductUpdateRequestDto request, String performedByUsername);
     void deleteProduct(Long id);

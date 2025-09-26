@@ -23,6 +23,9 @@ public class StockAdjustment {
     @Column(nullable = false)
     private int delta;
 
+    @Column
+    private int stockAfter;
+
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
@@ -36,6 +39,9 @@ public class StockAdjustment {
 
     public int getDelta() { return delta; }
     public void setDelta(int delta) { this.delta = delta; }
+
+    public int getStockAfter() { return stockAfter; }
+    public void setStockAfter(int stockAfter) { this.stockAfter = stockAfter; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }

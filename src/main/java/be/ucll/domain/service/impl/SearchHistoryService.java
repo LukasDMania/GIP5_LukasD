@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +44,7 @@ public class SearchHistoryService {
             history.remove(existing);
             history.addFirst(existing);
         } else {
+            criteria.setSearchTimestamp(LocalDateTime.now());
             history.addFirst(criteria);
 
             if (history.size() > MAX_HISTORY_SIZE) {
@@ -68,10 +70,6 @@ public class SearchHistoryService {
 
     public String createHistoryLabel(SearchCriteriaDto criteria) {
         StringBuilder labelBuilder = new StringBuilder();
-        if (criteria.getCreatedAfter() != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            labelBuilder.append(formatter.format(criteria.getCreatedAfter())).append(": ");
-        }
 
         List<String> parts = new LinkedList<>();
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");

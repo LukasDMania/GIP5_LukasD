@@ -1,4 +1,4 @@
-package be.ucll.ui.component;
+package be.ucll.ui.component.DashboardView;
 
 import be.ucll.application.dto.SearchCriteriaDto;
 import be.ucll.domain.service.ProductService;

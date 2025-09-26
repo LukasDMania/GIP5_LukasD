@@ -17,6 +17,8 @@ public class ProductMapper {
         return product;
     }
 
+
+
     public static Product toProductEntity(ProductUpdateRequestDto dto) {
         Product product = new Product();
         product.setName(dto.getName());

@@ -4,25 +4,18 @@ package be.ucll.ui.view;
 import be.ucll.application.dto.LoginDto;
 import be.ucll.domain.service.LoginService;
 import be.ucll.ui.component.AppLayoutTemplate;
-import be.ucll.ui.component.LoginForm;
+import be.ucll.ui.component.LoginView.LoginForm;
 import be.ucll.util.AppRoutes;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.PermitAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
 @Route(AppRoutes.LOGIN_VIEW)
 @PageTitle("Login")

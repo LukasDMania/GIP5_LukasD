@@ -9,6 +9,7 @@ import be.ucll.application.dto.stockadjustment.StockAdjustmentResponseDto;
 import be.ucll.application.events.SearchCompletedEvent;
 import be.ucll.application.mapper.product.ProductMapper;
 import be.ucll.domain.model.Product;
+import be.ucll.domain.model.StockAdjustment;
 import be.ucll.domain.model.User;
 import be.ucll.domain.repository.ProductRepository;
 import be.ucll.domain.service.ProductService;
@@ -121,6 +122,13 @@ public class ProductServiceImpl implements ProductService {
         return ProductMapper.toResponseDto(product);
     }
 
+    public Product getProductById(Long id) {
+        LOG.debug("PRODUCTS findById({})", id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+        return product;
+    }
+
     @PreAuthorize("hasRole('MANAGER')")
     @Transactional()
     public ProductResponseDto createProduct(ProductRequestDto productRequest, String performedByUsername) {
@@ -196,7 +204,28 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto request) {
-        return null;
+    public StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto productUpdateRequestDto) {
+        Product existingProduct = productRepository.findById(productUpdateRequestDto.getProductId())
+                .orElseThrow(() -> new ProductNotFoundException(productUpdateRequestDto.getProductId()));
+
+        int newStock = existingProduct.getStock() + productUpdateRequestDto.getDelta();
+        if (newStock < 0) {
+            throw new ProductUpdateException("Stock cannot go negative");
+        }
+        existingProduct.setStock(newStock);
+        Product savedProduct = productRepository.save(existingProduct);
+
+        User currentUser = userService.getDomainUserByUsername(productUpdateRequestDto.getPerformedByUsername());
+        StockAdjustment adjustment =
+                stockAdjustmentService.recordAdjustment(savedProduct, currentUser, productUpdateRequestDto.getDelta());
+
+        StockAdjustmentResponseDto responseDto = new StockAdjustmentResponseDto();
+        responseDto.setAdjustmentId(adjustment.getId());
+        responseDto.setProductId(savedProduct.getId());
+        responseDto.setDelta(adjustment.getDelta());
+        responseDto.setPerformedByUsername(adjustment.getAdjustedBy().getUsername());
+        responseDto.setTimestamp(adjustment.getTimestamp());
+
+        return responseDto;
     }
 }
