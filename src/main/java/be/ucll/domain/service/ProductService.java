@@ -18,4 +18,5 @@ public interface ProductService {
     List<String> autocompleteProductNames(String prefix);
     List<ProductResponseDto> searchProductsByCriteria(SearchCriteriaDto searchCriteriaDto);
     StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto request);
+    List<ProductResponseDto> searchProductsByCriteriaAndPublish(SearchCriteriaDto searchCriteriaDto);
 }

@@ -1,10 +1,10 @@
 package be.ucll.ui.component;
 
 import be.ucll.application.dto.SearchCriteriaDto;
-import be.ucll.application.events.ClearRequestedEvent;
-import be.ucll.application.events.SearchRequestedEvent;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.impl.SearchHistoryService;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -15,9 +15,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.shared.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -33,12 +33,9 @@ public class SearchForm extends VerticalLayout {
     private final ProductService productService;
     private final SearchHistoryService searchHistoryService;
 
-    private final ApplicationEventPublisher applicationEventPublisher;
-
-    public SearchForm(ProductService productService, SearchHistoryService searchHistoryHandler, ApplicationEventPublisher applicationEventPublisher) {
+    public SearchForm(ProductService productService, SearchHistoryService searchHistoryHandler) {
         this.productService = productService;
         this.searchHistoryService = searchHistoryHandler;
-        this.applicationEventPublisher = applicationEventPublisher;
 
         buildSearchForm();
     }
@@ -66,12 +63,11 @@ public class SearchForm extends VerticalLayout {
         historyComboBox.addValueChangeListener(event -> {
             if (event.getValue() != null) {
                 binder.readBean(event.getValue());
-                applicationEventPublisher.publishEvent(new SearchRequestedEvent(event.getValue()));
+                fireEvent(new SearchEvent(this, event.getValue()));
             }
         });
 
 
-        //Binder config
         binder.forField(minAmount)
                 .withConverter(
                         doubleValue -> doubleValue == null ? 0 : doubleValue.intValue(),
@@ -99,13 +95,13 @@ public class SearchForm extends VerticalLayout {
                 .bind(SearchCriteriaDto::getProductName, SearchCriteriaDto::setProductName);
 
         //Buttons
-        Button clearButton = new Button("Clear", event -> {
+        Button clearButton = new Button("Clear", _ -> {
             binder.readBean(new SearchCriteriaDto());
-            applicationEventPublisher.publishEvent(new ClearRequestedEvent());
+            fireEvent(new ClearEvent(this));
             errorLabel.setText("");
         });
 
-        Button searchButton = new Button("Search", event -> {
+        Button searchButton = new Button("Search", _ -> {
             LOG.info("User triggered search");
             SearchCriteriaDto tempCriteria = new SearchCriteriaDto();
 
@@ -119,7 +115,7 @@ public class SearchForm extends VerticalLayout {
                 //TODO: fire search event
                 try {
                     LOG.info("Firing SearchRequest Event");
-                    applicationEventPublisher.publishEvent(new SearchRequestedEvent(tempCriteria));
+                    fireEvent(new SearchEvent(this, tempCriteria));
                     LOG.info("Fired SearchResult Event");
                 } catch (Exception e) {
                     LOG.error("Error publishing SearchRequestedEvent", e);
@@ -148,5 +144,28 @@ public class SearchForm extends VerticalLayout {
 
     public void loadCriteria(SearchCriteriaDto criteria) {
         binder.readBean(criteria);
+    }
+
+    //Event handling
+    public static class SearchEvent extends ComponentEvent<SearchForm> {
+        private final SearchCriteriaDto criteria;
+        public SearchEvent(SearchForm source, SearchCriteriaDto criteria) {
+            super(source, false);
+            this.criteria = criteria;
+        }
+        public SearchCriteriaDto getCriteria() {
+            return criteria;
+        }
+    }
+
+    public static class ClearEvent extends ComponentEvent<SearchForm> {
+        public ClearEvent(SearchForm source) {
+            super(source, false);
+        }
+    }
+
+    public <T extends ComponentEvent<?>> Registration addListener(
+            Class<T> eventType, ComponentEventListener<T> listener) {
+        return getEventBus().addListener(eventType, listener);
     }
 }

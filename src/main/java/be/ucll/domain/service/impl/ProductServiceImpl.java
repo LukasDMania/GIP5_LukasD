@@ -6,13 +6,13 @@ import be.ucll.application.dto.product.ProductResponseDto;
 import be.ucll.application.dto.product.ProductUpdateRequestDto;
 import be.ucll.application.dto.stockadjustment.StockAdjustmentRequestDto;
 import be.ucll.application.dto.stockadjustment.StockAdjustmentResponseDto;
+import be.ucll.application.events.SearchCompletedEvent;
 import be.ucll.application.mapper.product.ProductMapper;
 import be.ucll.domain.model.Product;
 import be.ucll.domain.model.User;
 import be.ucll.domain.repository.ProductRepository;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.StockAdjustmentService;
-import be.ucll.domain.service.UserService;
 import be.ucll.exception.DataIntegrityException;
 import be.ucll.exception.product.ProductAlreadyExistsException;
 import be.ucll.exception.product.ProductNotFoundException;
@@ -20,11 +20,12 @@ import be.ucll.exception.product.ProductUpdateException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,6 +38,9 @@ public class ProductServiceImpl implements ProductService {
 
     @PersistenceContext
     private EntityManager em;
+
+    @Autowired
+    private ApplicationEventPublisher springEventPublisher;
 
     private final ProductRepository productRepository;
     private final UserServiceImpl userService;
@@ -61,7 +65,7 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
-    //@PreAuthorize("hasAnyRole('MANAGER','USER')")
+    @PreAuthorize("hasAnyRole('MANAGER','USER')")
     @Override
     public List<ProductResponseDto> searchProductsByCriteria(SearchCriteriaDto searchCriteriaDto) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -98,6 +102,15 @@ public class ProductServiceImpl implements ProductService {
         return resultList.stream()
                 .map(ProductMapper::toResponseDto)
                 .toList();
+    }
+
+    @PreAuthorize("hasAnyRole('MANAGER','USER')")
+    @Override
+    public List<ProductResponseDto> searchProductsByCriteriaAndPublish(SearchCriteriaDto searchCriteriaDto) {
+        List<ProductResponseDto> dtos = searchProductsByCriteria(searchCriteriaDto);
+
+        springEventPublisher.publishEvent(new SearchCompletedEvent(dtos,  searchCriteriaDto));
+        return dtos;
     }
 
     @PreAuthorize("hasAnyRole('MANAGER','USER')")

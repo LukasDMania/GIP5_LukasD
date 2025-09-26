@@ -1,4 +1,4 @@
 package be.ucll.application.events;
 
-public class ClearRequestedEvent {
+public class LoginSuccessEvent {
 }

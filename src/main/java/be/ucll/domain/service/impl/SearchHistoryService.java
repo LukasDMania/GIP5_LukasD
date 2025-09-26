@@ -3,6 +3,7 @@ package be.ucll.domain.service.impl;
 import be.ucll.application.dto.SearchCriteriaDto;
 import be.ucll.application.events.SearchHistoryChangedEvent;
 import com.vaadin.flow.server.VaadinSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +18,10 @@ public class SearchHistoryService {
     private static final String SEARCH_HISTORY_SESSION_KEY = "searchHistory";
     private static final int MAX_HISTORY_SIZE = 5;
 
-    private final ApplicationEventPublisher applicationEventPublisher;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
-    public SearchHistoryService(ApplicationEventPublisher applicationEventPublisher) {
-        this.applicationEventPublisher = applicationEventPublisher;
+    public SearchHistoryService() {
     }
 
     public void addToHistory(SearchCriteriaDto criteria) {
@@ -37,7 +38,7 @@ public class SearchHistoryService {
 
         if (existingMatch.isPresent()) {
             SearchCriteriaDto existing = existingMatch.get();
-            existing.setCreatedAfter(criteria.getCreatedAfter());
+            existing.setSearchTimestamp(criteria.getSearchTimestamp());
 
             history.remove(existing);
             history.addFirst(existing);
@@ -52,7 +53,7 @@ public class SearchHistoryService {
         VaadinSession.getCurrent().setAttribute(SEARCH_HISTORY_SESSION_KEY, history);
 
         //TODO: fire history changed event
-        applicationEventPublisher.publishEvent(new SearchHistoryChangedEvent());
+        applicationEventPublisher.publishEvent(new SearchHistoryChangedEvent(history));
     }
 
     public LinkedList<SearchCriteriaDto> loadHistory() {

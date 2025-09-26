@@ -1,7 +1,8 @@
 package be.ucll.ui.component;
 
 import be.ucll.application.dto.LoginDto;
-import be.ucll.application.events.LoginRequestedEvent;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Span;
@@ -9,7 +10,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import org.springframework.context.ApplicationEventPublisher;
+import com.vaadin.flow.shared.Registration;
 
 public class LoginForm extends VerticalLayout {
     private final Binder<LoginDto> binder = new Binder<>(LoginDto.class);
@@ -20,11 +21,7 @@ public class LoginForm extends VerticalLayout {
     private final Span errorLabel = new Span();
     private final Button loginButton = new Button("Login");
 
-    private final ApplicationEventPublisher applicationEventPublisher;
-
-    public LoginForm(ApplicationEventPublisher applicationEventPublisher) {
-        this.applicationEventPublisher = applicationEventPublisher;
-
+    public LoginForm() {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
         setSizeFull();
@@ -40,11 +37,11 @@ public class LoginForm extends VerticalLayout {
 
         add(formLayout, errorLabel);
 
+        username.setValue("user");
+        password.setValue("user");
         loginButton.addClickListener(_ -> {
             if (binder.writeBeanIfValid(loginDto)) {
-                applicationEventPublisher.publishEvent(
-                        new LoginRequestedEvent(loginDto)
-                );
+                fireEvent(new LoginEvent(this, loginDto));
             } else {
                 setErrorMessage("Ongeldige gebruikersnaam of wachtwoord.");
             }
@@ -66,5 +63,21 @@ public class LoginForm extends VerticalLayout {
 
     public void setErrorMessage(String message) {
         errorLabel.setText(message);
+    }
+
+    //COmponent events
+    public static class LoginEvent extends ComponentEvent<LoginForm> {
+        private final LoginDto loginDto;
+        public LoginEvent(LoginForm source, LoginDto loginDto) {
+            super(source, false);
+            this.loginDto = loginDto;
+        }
+        public LoginDto getLoginDto() {
+            return loginDto;
+        }
+    }
+
+    public Registration addLoginListener(ComponentEventListener<LoginEvent> listener) {
+        return addListener(LoginEvent.class, listener);
     }
 }

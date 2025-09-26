@@ -7,6 +7,7 @@ public class SearchCriteriaDto {
     private int maxStock;
     private String productName;
     private LocalDateTime createdAfter;
+    private LocalDateTime searchTimestamp;
 
     public int getMinStock() {
         return minStock;
@@ -35,6 +36,11 @@ public class SearchCriteriaDto {
     public void setCreatedAfter(LocalDateTime createdAfter) {
         this.createdAfter = createdAfter;
     }
+
+    public LocalDateTime getSearchTimestamp() {
+        return searchTimestamp;
+    }
+    public void setSearchTimestamp(LocalDateTime searchTimestamp) {}
 
 
     public boolean hasAtLeastOneCriteria() {

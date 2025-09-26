@@ -2,9 +2,7 @@ package be.ucll.ui.view;
 
 import be.ucll.application.dto.SearchCriteriaDto;
 import be.ucll.application.dto.product.ProductResponseDto;
-import be.ucll.application.events.ClearRequestedEvent;
 import be.ucll.application.events.SearchHistoryChangedEvent;
-import be.ucll.application.events.SearchRequestedEvent;
 import be.ucll.application.mapper.product.ProductMapper;
 import be.ucll.domain.model.Product;
 import be.ucll.domain.service.ProductService;
@@ -15,19 +13,16 @@ import be.ucll.ui.component.SearchForm;
 import be.ucll.util.AppRoutes;
 import be.ucll.util.RoleConstants;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
-import com.vaadin.flow.spring.annotation.UIScope;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -40,9 +35,9 @@ import java.util.List;
 
 @Route(AppRoutes.DASHBOARD_VIEW)
 @PageTitle("Login")
-@PermitAll
+@RolesAllowed({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_USER})
 @Component
-public class DashboardView extends AppLayoutTemplate {
+public class DashboardView extends AppLayoutTemplate implements ViewContractLD{
 
     private static final Logger LOG = LoggerFactory.getLogger(DashboardView.class);
 
@@ -52,18 +47,11 @@ public class DashboardView extends AppLayoutTemplate {
     @Autowired
     private ProductService productService;
 
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
-
     private SearchForm searchForm;
     private ProductGrid productGrid;
+
     public DashboardView() {
         LOG.info("DashboardView initialized");
-    }
-
-    @PostConstruct
-    private void init() {
-
     }
 
     @Override
@@ -72,7 +60,8 @@ public class DashboardView extends AppLayoutTemplate {
 
         LOG.info("DashboardView onAttach");
 
-        setBody(buildDashboardLayout());
+        setBody(buildLayout());
+        subscribeEventListeners();
         restoreSession();
         searchForm.setHistoryComboBoxItems(searchHistoryService.loadHistory());
 
@@ -87,9 +76,10 @@ public class DashboardView extends AppLayoutTemplate {
         }
     }
 
-    private VerticalLayout buildDashboardLayout() {
+    @Override
+    public VerticalLayout buildLayout() {
         productGrid = new ProductGrid();
-        searchForm = new SearchForm(productService, searchHistoryService, applicationEventPublisher);
+        searchForm = new SearchForm(productService, searchHistoryService);
 
         VerticalLayout layout = new VerticalLayout(searchForm, productGrid);
         layout.setSizeFull();
@@ -97,6 +87,26 @@ public class DashboardView extends AppLayoutTemplate {
         layout.setSpacing(true);
 
         return layout;
+    }
+
+    @Override
+    public void subscribeEventListeners() {
+        searchForm.addListener(SearchForm.SearchEvent.class, event -> {
+            handleSearch(event.getCriteria());
+        });
+
+        searchForm.addListener(SearchForm.ClearEvent.class, _ -> {
+            productGrid.setItems(Collections.emptyList());
+        });
+    }
+
+    //Spring event listeners
+    @EventListener
+    public void onSearchHistoryChanged(SearchHistoryChangedEvent event) {
+        LOG.info("onSearchHistoryChanged");
+        getUI().ifPresent(ui -> ui.access(() -> {
+            searchForm.setHistoryComboBoxItems(event.history());
+        }));
     }
 
     private void restoreSession() {
@@ -114,32 +124,27 @@ public class DashboardView extends AppLayoutTemplate {
         }
     }
 
-    @EventListener
-    public void onSearchRequested(SearchRequestedEvent event) {
-        LOG.info("onSearchRequested listener");
+    private void handleSearch(SearchCriteriaDto criteria) {
+        List<ProductResponseDto> results = productService.searchProductsByCriteriaAndPublish(criteria);
+        productGrid.setItems(results);
 
-        List<ProductResponseDto> productResponseDtos = productService.searchProductsByCriteria(event.searchCriteriaDto());
-        productGrid.setItems(productResponseDtos);
+        searchHistoryService.addToHistory(criteria);
 
-        searchHistoryService.addToHistory(event.searchCriteriaDto());
+        VaadinSession.getCurrent().setAttribute("lastSearchCriteria", criteria);
+        VaadinSession.getCurrent().setAttribute("lastSearchResults", results);
 
-        VaadinSession.getCurrent().setAttribute("lastSearchCriteria", event.searchCriteriaDto());
-        VaadinSession.getCurrent().setAttribute("lastSearchResults", productResponseDtos);
-
-        if (productResponseDtos.isEmpty()) {
-            Notification.show("Geen resultaten gevonden.", 3000, Notification.Position.MIDDLE);
+        if (results.isEmpty()) {
+            showNotification("Geen resultaten gevonden.");
         } else {
-            Notification.show(productResponseDtos.size() + " resultaten gevonden.", 3000, Notification.Position.MIDDLE);
+            showNotification(results.size() + " resultaten gevonden.");
         }
     }
 
-    @EventListener
-    public void onClearRequested(ClearRequestedEvent event) {
-        productGrid.setItems(Collections.emptyList());
-    }
-
-    @EventListener
-    public void onSearchHistoryChanged(SearchHistoryChangedEvent event) {
-        searchForm.setHistoryComboBoxItems(searchHistoryService.loadHistory());
+    private void showNotification(String message) {
+        Notification notification = new Notification();
+        notification.setText(message);
+        notification.setDuration(3000);
+        notification.setPosition(Notification.Position.MIDDLE);
+        notification.open();
     }
 }

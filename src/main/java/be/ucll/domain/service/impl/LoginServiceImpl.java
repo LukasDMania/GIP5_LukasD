@@ -1,11 +1,14 @@
 package be.ucll.domain.service.impl;
 
 import be.ucll.application.dto.LoginDto;
+import be.ucll.application.events.LoginFailedEvent;
+import be.ucll.application.events.LoginSuccessEvent;
 import be.ucll.domain.service.LoginService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +28,9 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private HttpServletRequest httpServletRequest;
 
+    @Autowired
+    private ApplicationEventPublisher springEventPublisher;
+
 
     @Override
     public boolean authenticate(LoginDto loginDto) {
@@ -39,10 +45,12 @@ public class LoginServiceImpl implements LoginService {
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
 
+            springEventPublisher.publishEvent(new LoginSuccessEvent());
+
             return true;
         } catch (AuthenticationException ex) {
             LOG.warn("Login failed for user '{}': {}", loginDto.getUsername(), ex.getMessage());
-
+            springEventPublisher.publishEvent(new LoginFailedEvent());
             return false;
         }
     }

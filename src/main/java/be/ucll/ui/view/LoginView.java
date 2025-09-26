@@ -1,14 +1,12 @@
 package be.ucll.ui.view;
 
 
-import be.ucll.application.events.LoginFailedEvent;
-import be.ucll.application.events.LoginSucceededEvent;
+import be.ucll.application.dto.LoginDto;
 import be.ucll.domain.service.LoginService;
 import be.ucll.ui.component.AppLayoutTemplate;
 import be.ucll.ui.component.LoginForm;
 import be.ucll.util.AppRoutes;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
@@ -20,31 +18,35 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Route(AppRoutes.LOGIN_VIEW)
 @PageTitle("Login")
 @PermitAll
-@Component
-public class LoginView extends AppLayoutTemplate {
+public class LoginView extends AppLayoutTemplate implements ViewContractLD {
 
     private static final Logger LOG = LoggerFactory.getLogger(LoginView.class);
 
     @Autowired
     private LoginService loginService;
 
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
-
     private LoginForm loginForm;
 
-    @PostConstruct
-    private void init() {
-        setBody(buildLoginLayout());
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+
+        setBody(buildLayout());
+        subscribeEventListeners();
     }
 
-    private VerticalLayout buildLoginLayout() {
-        loginForm = new LoginForm(applicationEventPublisher);
+    @Override
+    public VerticalLayout buildLayout() {
+        loginForm = new LoginForm();
 
         VerticalLayout layout = new VerticalLayout(loginForm);
         layout.setSizeFull();
@@ -54,17 +56,22 @@ public class LoginView extends AppLayoutTemplate {
         return layout;
     }
 
-    @EventListener
-    public void onLoginSucceeded(LoginSucceededEvent event) {
-        UI.getCurrent().navigate(AppRoutes.DASHBOARD_VIEW);
+    @Override
+    public void subscribeEventListeners() {
+        loginForm.addLoginListener(loginEvent -> {
+            handleLogin(loginEvent.getLoginDto());
+        });
     }
 
-    @EventListener
-    public void onLoginFailed(LoginFailedEvent event) {
-        ConfirmDialog dialog = new ConfirmDialog();
-        dialog.setHeader("Login Failed");
-        dialog.setText("Invalid username or password. Please try again.");
-        dialog.setConfirmText("OK");
-        dialog.open();
+    private void handleLogin(LoginDto loginDto) {
+        try {
+            loginService.authenticate(loginDto);
+            LOG.info("Login successful for user: {}", loginDto.getUsername());
+            Notification.show("Login Successful", 2000, Notification.Position.MIDDLE);
+            getUI().ifPresent(ui -> ui.navigate(AppRoutes.DASHBOARD_VIEW));
+        } catch (AuthenticationException e) {
+            LOG.warn("Login failed for user: {}", loginDto.getUsername());
+            loginForm.setErrorMessage("Invalid username or password.");
+        }
     }
 }

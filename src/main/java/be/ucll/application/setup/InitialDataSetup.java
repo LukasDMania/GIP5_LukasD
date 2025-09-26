@@ -95,13 +95,18 @@ public class InitialDataSetup {
 
 	private List<Product> generateProducts(int count) {
 		List<Product> products = new ArrayList<>();
-		for (int i = 0; i < count; i++) {
-			Product p = new Product();
-			p.setName(faker.commerce().productName());
-			p.setDescription(faker.lorem().sentence());
-			p.setStock(random.nextInt(5000)); // random stock between 0-499
-			p.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(365)));
-			products.add(p);
+		Set<String> usedNames = new HashSet<>();
+
+		while (products.size() < count) {
+			String name = faker.commerce().productName();
+			if (usedNames.add(name)) {
+				Product p = new Product();
+				p.setName(name);
+				p.setDescription(faker.lorem().sentence());
+				p.setStock(random.nextInt(5000));
+				p.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(365)));
+				products.add(p);
+			}
 		}
 		return products;
 	}
