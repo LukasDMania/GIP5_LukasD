@@ -3,6 +3,7 @@ package be.ucll.ui.component.DashboardView;
 import be.ucll.application.dto.SearchCriteriaDto;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.impl.SearchHistoryService;
+import be.ucll.util.UserUtil;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
@@ -18,6 +19,9 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.shared.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -94,7 +98,7 @@ public class SearchForm extends VerticalLayout {
         binder.forField(productName)
                 .bind(SearchCriteriaDto::getProductName, SearchCriteriaDto::setProductName);
 
-        //Buttons
+
         Button clearButton = new Button("Clear", _ -> {
             binder.readBean(new SearchCriteriaDto());
             fireEvent(new ClearEvent(this));
@@ -128,9 +132,23 @@ public class SearchForm extends VerticalLayout {
             }
         });
 
-        FormLayout formLayout = new FormLayout(
-                minAmount, maxAmount, productName, createdAfter, clearButton, searchButton, historyComboBox
-        );
+        Button createProductButton = new Button("Create Product", _ -> {
+            fireEvent(new CreateProductEvent(this));
+            errorLabel.setText("");
+        });
+
+        FormLayout formLayout;
+        if (userHasRole("ROLE_ADMIN") || userHasRole("ROLE_MANAGER")) {
+            formLayout = new FormLayout(
+                    minAmount, maxAmount, productName, createdAfter,
+                    clearButton, searchButton, createProductButton, historyComboBox
+            );
+        } else {
+            formLayout = new FormLayout(
+                    minAmount, maxAmount, productName, createdAfter,
+                    clearButton, searchButton, historyComboBox
+            );
+        }
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
         VerticalLayout wrapper = new VerticalLayout(formLayout, errorLabel);
@@ -146,7 +164,11 @@ public class SearchForm extends VerticalLayout {
         binder.readBean(criteria);
     }
 
-    //Event handling
+    private boolean userHasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority(role));
+    }
+
     public static class SearchEvent extends ComponentEvent<SearchForm> {
         private final SearchCriteriaDto criteria;
         public SearchEvent(SearchForm source, SearchCriteriaDto criteria) {
@@ -163,6 +185,12 @@ public class SearchForm extends VerticalLayout {
             super(source, false);
         }
     }
+    public static class CreateProductEvent extends ComponentEvent<SearchForm> {
+        public  CreateProductEvent(SearchForm source) {
+            super(source, false);
+        }
+    }
+
 
     public <T extends ComponentEvent<?>> Registration addListener(
             Class<T> eventType, ComponentEventListener<T> listener) {

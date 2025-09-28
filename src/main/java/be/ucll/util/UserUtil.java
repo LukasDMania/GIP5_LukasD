@@ -21,4 +21,11 @@ public class UserUtil {
         String username = auth.getName();
         return userService.getDomainUserByUsername(username);
     }
+
+    public String getCurrentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return null;
+
+        return auth.getName();
+    }
 }

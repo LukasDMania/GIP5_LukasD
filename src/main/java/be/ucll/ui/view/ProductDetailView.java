@@ -97,6 +97,12 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
         productDetailCard.addEditListener(_ -> {
             getUI().ifPresent(ui -> ui.navigate("product/edit/" + currentProduct.getId()));
         });
+
+        productDetailCard.addDeleteListener(_ -> {
+            productService.deleteProduct(currentProduct.getId());
+            NotificationUtil.showNotification("Product deleted", 2000);
+            getUI().ifPresent(ui -> ui.navigate(AppRoutes.DASHBOARD_VIEW));
+        });
     }
 
     @Override

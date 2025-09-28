@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @Route(AppRoutes.PRODUCT_EDIT_VIEW)
 @PageTitle("Product Edit")
-@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER, RoleConstants.ROLE_USER})
+@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER})
 public class ProductEditView extends AppLayoutTemplate implements BeforeEnterObserver, ViewContractLD {
 
     private final Logger LOG = LoggerFactory.getLogger(ProductEditView.class);

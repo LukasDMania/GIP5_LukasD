@@ -80,17 +80,24 @@ public class DashboardView extends AppLayoutTemplate implements ViewContractLD{
         searchForm.addListener(SearchForm.ClearEvent.class, _ -> {
             productGrid.setItems(Collections.emptyList());
         });
+
+        searchForm.addListener(SearchForm.CreateProductEvent.class, _ -> {
+            getUI().ifPresent(ui -> ui.navigate(AppRoutes.PRODUCT_CREATE_VIEW));
+        });
     }
 
     private void restoreSession() {
         SearchCriteriaDto savedCriteria = (SearchCriteriaDto)
                 VaadinSession.getCurrent().getAttribute("lastSearchCriteria");
-        List<ProductResponseDto> savedResults = (List<ProductResponseDto>)
-                VaadinSession.getCurrent().getAttribute("lastSearchResults");
+        //List<ProductResponseDto> savedResults = (List<ProductResponseDto>)
+        //        VaadinSession.getCurrent().getAttribute("lastSearchResults");
 
-        if (savedCriteria != null && savedResults != null) {
-            searchForm.loadCriteria(savedCriteria);
-            productGrid.setItems(savedResults);
+        if (savedCriteria != null) {
+            List<ProductResponseDto> results = productService.searchProductsByCriteria(savedCriteria);
+            if (results != null) {
+                searchForm.loadCriteria(savedCriteria);
+                productGrid.setItems(results);
+            }
         }
     }
 

@@ -25,6 +25,7 @@ public class ProductDetailCard extends VerticalLayout {
     private final Span productCreatedAt = new Span();
     private final Button backButton = new Button("Back");
     private final Button editButton = new Button("Edit");
+    private final Button deleteButton = new Button("Delete");
 
     public ProductDetailCard() {
         setSizeFull();
@@ -35,8 +36,9 @@ public class ProductDetailCard extends VerticalLayout {
         backButton.addClickListener(e -> fireEvent(new BackEvent(this)));
 
         if (userHasRole("ROLE_ADMIN") || userHasRole("ROLE_MANAGER")) {
-            editButton.addClickListener(e -> fireEvent(new EditEvent(this)));
-            add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton, editButton);
+            editButton.addClickListener(_ -> fireEvent(new EditEvent(this)));
+            deleteButton.addClickListener(_ -> fireEvent(new DeleteEvent(this)));
+            add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton, editButton, deleteButton);
         } else {
             add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton);
         }
@@ -67,11 +69,19 @@ public class ProductDetailCard extends VerticalLayout {
             super(source, false);
         }
     }
+    public static class DeleteEvent extends ComponentEvent<ProductDetailCard> {
+        public DeleteEvent(ProductDetailCard source) {
+            super(source, false);
+        }
+    }
 
     public Registration addBackListener(ComponentEventListener<BackEvent> listener) {
         return addListener(BackEvent.class, listener);
     }
     public Registration addEditListener(ComponentEventListener<EditEvent> listener) {
         return addListener(EditEvent.class, listener);
+    }
+    public Registration addDeleteListener(ComponentEventListener<DeleteEvent> listener) {
+        return addListener(DeleteEvent.class, listener);
     }
 }

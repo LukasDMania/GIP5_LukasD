@@ -33,7 +33,12 @@ public class JpaConfig {
 
 	@Bean(initMethod = "start", destroyMethod = "stop")
 	public Server h2Server() throws SQLException {
-		return Server.createTcpServer("-tcp", "-tcpAllowOthers", "-tcpShutdownForce");
+		return Server.createTcpServer(
+				"-tcp",
+				"-tcpAllowOthers",
+				"-tcpShutdownForce",
+				"-ifNotExists"
+		);
 	}
 
 	@Bean(initMethod = "setIsolationLevelReadUncommited")

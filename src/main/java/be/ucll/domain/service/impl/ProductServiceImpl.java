@@ -129,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
         return product;
     }
 
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Transactional()
     public ProductResponseDto createProduct(ProductRequestDto productRequest, String performedByUsername) {
         LOG.info("PRODUCTS createProduct({}, {})", performedByUsername, productRequest.getName());
@@ -185,7 +185,8 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+
     @Transactional
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
