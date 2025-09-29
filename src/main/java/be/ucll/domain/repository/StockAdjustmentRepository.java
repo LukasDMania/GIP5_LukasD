@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface StockAdjustmentRepository extends JpaRepository<StockAdjustment, Long> {
     List<StockAdjustment> findByProductOrderByTimestampDesc(Product product);
+    List<StockAdjustment> findAll();
 }

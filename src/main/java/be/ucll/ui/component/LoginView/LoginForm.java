@@ -37,8 +37,8 @@ public class LoginForm extends VerticalLayout {
 
         add(formLayout, errorLabel);
 
-        username.setValue("user");
-        password.setValue("user");
+        username.setValue("admin");
+        password.setValue("admin");
         loginButton.addClickListener(_ -> {
             if (binder.writeBeanIfValid(loginDto)) {
                 fireEvent(new LoginEvent(this, loginDto));

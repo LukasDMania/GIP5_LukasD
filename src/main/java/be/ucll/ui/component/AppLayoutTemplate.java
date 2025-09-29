@@ -1,6 +1,6 @@
 package be.ucll.ui.component;
 
-import be.ucll.ui.view.AnalyticsView;
+import be.ucll.ui.view.Analytics.AnalyticsView;
 import be.ucll.ui.view.DashboardView;
 import be.ucll.util.RoleConstants;
 import com.vaadin.flow.component.AttachEvent;
@@ -47,7 +47,6 @@ public class AppLayoutTemplate extends VerticalLayout {
         Div header = new Div();
         header.setSizeFull();
         header.getStyle()
-                .set("background", "#f0f0f0")
                 .set("padding", "1rem")
                 .set("border-bottom", "1px solid #ccc");
 
@@ -78,7 +77,6 @@ public class AppLayoutTemplate extends VerticalLayout {
         footer.setSizeFull();
         footer.setText("©My Stock System. Do not reuse without permission");
         footer.getStyle()
-                .set("background", "#f0f0f0")
                 .set("padding", "0.5rem")
                 .set("border-top", "1px solid #ccc")
                 .set("font-size", "small")

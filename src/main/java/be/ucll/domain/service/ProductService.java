@@ -8,7 +8,9 @@ import be.ucll.application.dto.stockadjustment.StockAdjustmentRequestDto;
 import be.ucll.application.dto.stockadjustment.StockAdjustmentResponseDto;
 import be.ucll.domain.model.Product;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface ProductService {
     List<ProductResponseDto> findAll();
@@ -21,4 +23,11 @@ public interface ProductService {
     List<ProductResponseDto> searchProductsByCriteria(SearchCriteriaDto searchCriteriaDto);
     StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto request);
     List<ProductResponseDto> searchProductsByCriteriaAndPublish(SearchCriteriaDto searchCriteriaDto);
+    int totalProducts();
+    int totalStock();
+    ProductResponseDto mostAdjustedProduct();
+    Map<LocalDateTime, Long> getProductCreationCountOverTime();
+    List<Product> getTopProductsByStock(int limit);
+    double getAverageStockLevel();
+    Map<Product, Long> getAdjustmentCountsPerProduct();
 }

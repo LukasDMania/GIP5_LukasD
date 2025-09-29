@@ -12,6 +12,7 @@ import be.ucll.domain.model.Product;
 import be.ucll.domain.model.StockAdjustment;
 import be.ucll.domain.model.User;
 import be.ucll.domain.repository.ProductRepository;
+import be.ucll.domain.repository.StockAdjustmentRepository;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.StockAdjustmentService;
 import be.ucll.exception.DataIntegrityException;
@@ -29,8 +30,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -46,15 +50,17 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final UserServiceImpl userService;
     private final StockAdjustmentService stockAdjustmentService;
+    private final StockAdjustmentRepository stockAdjustmentRepository;
 
     private static final int MAX_ABSOLUTE_DELTA = 100000000;
 
     public ProductServiceImpl(ProductRepository productRepository,
                               StockAdjustmentService stockAdjustmentService,
-                              UserServiceImpl userService) {
+                              UserServiceImpl userService, StockAdjustmentRepository stockAdjustmentRepository) {
         this.productRepository = productRepository;
         this.stockAdjustmentService = stockAdjustmentService;
         this.userService = userService;
+        this.stockAdjustmentRepository = stockAdjustmentRepository;
     }
 
     @PreAuthorize("hasAnyRole('MANAGER','USER')")
@@ -112,6 +118,28 @@ public class ProductServiceImpl implements ProductService {
 
         springEventPublisher.publishEvent(new SearchCompletedEvent(dtos,  searchCriteriaDto));
         return dtos;
+    }
+
+    @Override
+    public int totalProducts() {
+        return (int)productRepository.count();
+    }
+
+    @Override
+    public int totalStock() {
+        return productRepository.sumStock();
+    }
+
+    @Override
+    public ProductResponseDto mostAdjustedProduct() {
+        Map<Product, Long> counts = stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(StockAdjustment::getProduct, Collectors.counting()));
+
+        Map.Entry<Product, Long> max = counts.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElse(null);
+
+        return max != null ? ProductMapper.toResponseDto(max.getKey()) : null;
     }
 
     @PreAuthorize("hasAnyRole('MANAGER','USER')")
@@ -186,7 +214,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-
     @Transactional
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
@@ -229,4 +256,31 @@ public class ProductServiceImpl implements ProductService {
 
         return responseDto;
     }
+
+    public Map<LocalDateTime, Long> getProductCreationCountOverTime() {
+        return productRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        product -> product.getCreatedAt().withHour(0).withMinute(0).withSecond(0).withNano(0),
+                        Collectors.counting()
+                ));
+    }
+
+    public List<Product> getTopProductsByStock(int limit) {
+        return productRepository.findAll().stream()
+                .sorted((p1, p2) -> Integer.compare(p2.getStock(), p1.getStock()))
+                .limit(limit)
+                .toList();
+    }
+
+    public double getAverageStockLevel() {
+        List<Product> products = productRepository.findAll();
+        if (products.isEmpty()) return 0.0;
+        return products.stream().mapToInt(Product::getStock).average().orElse(0);
+    }
+
+    public Map<Product, Long> getAdjustmentCountsPerProduct() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(StockAdjustment::getProduct, Collectors.counting()));
+    }
+
 }
