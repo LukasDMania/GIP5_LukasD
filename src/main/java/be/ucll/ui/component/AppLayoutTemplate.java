@@ -23,10 +23,16 @@ public class AppLayoutTemplate extends VerticalLayout {
         setPadding(false);
         setSpacing(false);
 
-        add(buildHeader(), body, buildFooter());
+        Component header = buildHeader();
+        Component footer = buildFooter();
+
+        add(header, body, footer);
+        expand(body);
 
         body.setSizeFull();
-        body.getStyle().set("padding", "1rem");
+        body.getStyle()
+                .set("overflow", "auto");
+        getStyle().set("box-sizing", "border-box");
     }
 
     @Override
@@ -45,13 +51,16 @@ public class AppLayoutTemplate extends VerticalLayout {
 
     private Component buildHeader() {
         Div header = new Div();
-        header.setSizeFull();
         header.getStyle()
-                .set("padding", "1rem")
-                .set("border-bottom", "1px solid #ccc");
+                .set("width", "100%")
+                .set("min-height", "3rem")
+                .set("padding", "0.5rem 1rem")
+                .set("border-bottom", "1px solid black")
+                .set("display", "flex")
+                .set("align-items", "center");
 
         Image logo = new Image("https://dummyimage.com/100x40/000/fff&text=MyStock", "Logo");
-        logo.setHeight("40px");
+        logo.setHeight("2rem");
 
         Span title = new Span("Stock Lookup System LD");
         title.getStyle()
@@ -74,19 +83,27 @@ public class AppLayoutTemplate extends VerticalLayout {
 
     private Component buildFooter() {
         Div footer = new Div();
-        footer.setSizeFull();
         footer.setText("©My Stock System. Do not reuse without permission");
         footer.getStyle()
-                .set("padding", "0.5rem")
-                .set("border-top", "1px solid #ccc")
-                .set("font-size", "small")
-                .set("text-align", "center");
+                .set("width", "100%")
+                .set("min-height", "2.5rem")
+                .set("padding", "0.5rem 1rem")
+                .set("border-top", "1px solid black")
+                .set("display", "flex")
+                .set("align-items", "center")
+                .set("justify-content", "center");
 
         return footer;
     }
 
     public void setBody(Component content) {
+        Div contentWrapper = new Div(content);
+        contentWrapper.setSizeFull();
+        contentWrapper.getStyle()
+                .set("padding", "3rem")
+                .set("box-sizing", "border-box");
+
         body.removeAll();
-        body.add(content);
+        body.add(contentWrapper);
     }
 }

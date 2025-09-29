@@ -1,5 +1,6 @@
 package be.ucll.ui.view.Analytics;
 
+import be.ucll.domain.model.Product;
 import be.ucll.domain.service.ProductService;
 import be.ucll.ui.component.AppLayoutTemplate;
 import be.ucll.ui.component.JFreeChartComponent;
@@ -8,6 +9,7 @@ import be.ucll.util.AppRoutes;
 import be.ucll.util.ChartUtil;
 import be.ucll.util.RoleConstants;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
@@ -24,13 +26,17 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Route(AppRoutes.PRODUCT_ANALYTICSVIEW)
 @PageTitle("Products Analysis")
 @RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER})
+@CssImport("./styles/ProductsAnalyticsBody.css")
 public class ProductsAnalyticsView extends AppLayoutTemplate implements ViewContractLD {
 
     @Autowired
@@ -50,7 +56,7 @@ public class ProductsAnalyticsView extends AppLayoutTemplate implements ViewCont
         layout.setJustifyContentMode(JustifyContentMode.CENTER);
 
         layout.add(buildKpiRow(), buildChartsRow());
-
+        layout.setClassName("ProductsAnalyticsBody");
         return layout;
     }
 
@@ -61,6 +67,7 @@ public class ProductsAnalyticsView extends AppLayoutTemplate implements ViewCont
         row.setSpacing(true);
 
         row.add(createKpiCard("Total Products", productService.totalProducts()));
+        row.add(createKpiCard("Total Stock",  productService.totalStock()));
         row.add(createKpiCard("Average Stock", String.format("%.2f", productService.getAverageStockLevel())));
         row.add(createKpiCard("Most Adjusted Product", productService.mostAdjustedProduct().getName()));
 
@@ -111,13 +118,21 @@ public class ProductsAnalyticsView extends AppLayoutTemplate implements ViewCont
     }
 
     private JFreeChartComponent createAdjustmentCountsChart() {
-        Map<String, Number> adjustmentData = new LinkedHashMap<>();
-        productService.getAdjustmentCountsPerProduct().forEach((product, count) ->
-                adjustmentData.put(product.getName(), count));
+        List<Map.Entry<Product, Long>> allAdjustments = new ArrayList<>(productService.getAdjustmentCountsPerProduct()
+                .entrySet());
+
+        allAdjustments.sort(Map.Entry.<Product, Long>comparingByValue().reversed());
+
+        Map<String, Number> adjustmentData = allAdjustments.stream()
+                .limit(10)
+                .collect(LinkedHashMap::new,
+                        (map, entry) -> map.put(entry.getKey().getName(), entry.getValue()),
+                        Map::putAll);
+
 
         DefaultCategoryDataset dataset = ChartUtil.toCategoryDataset(adjustmentData, "Adjustments");
         JFreeChart chart = ChartUtil.createHorizontalBarChart(
-                "Adjustments per Product", "Count", "Product", dataset);
+                "Top 10 Adjustments per Product", "Count", "Product", dataset);
 
         return new JFreeChartComponent(chart, 800, 400);
     }
