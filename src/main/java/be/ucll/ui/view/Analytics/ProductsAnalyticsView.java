@@ -1,5 +1,6 @@
 package be.ucll.ui.view.Analytics;
 
+import be.ucll.application.dto.product.ProductResponseDto;
 import be.ucll.domain.model.Product;
 import be.ucll.domain.service.ProductService;
 import be.ucll.ui.component.AppLayoutTemplate;
@@ -9,6 +10,8 @@ import be.ucll.util.AppRoutes;
 import be.ucll.util.ChartUtil;
 import be.ucll.util.RoleConstants;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -66,11 +69,15 @@ public class ProductsAnalyticsView extends AppLayoutTemplate implements ViewCont
         row.setJustifyContentMode(JustifyContentMode.CENTER);
         row.setSpacing(true);
 
+        ProductResponseDto dto = productService.mostAdjustedProduct();
+
         row.add(createKpiCard("Total Products", productService.totalProducts()));
         row.add(createKpiCard("Total Stock",  productService.totalStock()));
         row.add(createKpiCard("Average Stock", String.format("%.2f", productService.getAverageStockLevel())));
-        row.add(createKpiCard("Most Adjusted Product", productService.mostAdjustedProduct().getName()));
-
+        row.add(createKpiCard("Most Adjusted Product", dto.getName(),
+                _ -> {
+                    getUI().ifPresent(ui -> ui.navigate("product/" + dto.getId()));
+                }));
         return row;
     }
 
@@ -78,6 +85,18 @@ public class ProductsAnalyticsView extends AppLayoutTemplate implements ViewCont
         Div card = new Div();
         card.addClassName("kpi-card");
         card.add(new H3(title), new H1(value.toString()));
+        return card;
+    }
+    private Div createKpiCard(String title, Object value, ComponentEventListener<ClickEvent<Div>> clickListener) {
+        Div card = new Div();
+        card.addClassName("kpi-card");
+        card.add(new H3(title), new H1(value.toString()));
+
+        if (clickListener != null) {
+            card.addClickListener(clickListener);
+            card.getStyle().set("cursor", "pointer");
+        }
+
         return card;
     }
 

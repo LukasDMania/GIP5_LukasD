@@ -6,6 +6,7 @@ import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.shared.Registration;
 import org.slf4j.Logger;
@@ -14,9 +15,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+
 public class ProductDetailCard extends VerticalLayout {
 
-    private final Logger LOG =  LoggerFactory.getLogger(ProductDetailCard.class);
+    private final Logger LOG = LoggerFactory.getLogger(ProductDetailCard.class);
 
     private final Span productId = new Span();
     private final Span productName = new Span();
@@ -35,22 +37,38 @@ public class ProductDetailCard extends VerticalLayout {
 
         backButton.addClickListener(e -> fireEvent(new BackEvent(this)));
 
+        VerticalLayout detailsLayout = new VerticalLayout(
+                labeledRow("Product Id:", productId),
+                labeledRow("Name:", productName),
+                labeledRow("Current Stock:", productStock),
+                labeledRow("Description:", productDescription),
+                labeledRow("Created At:", productCreatedAt)
+        );
+        detailsLayout.setPadding(false);
+        detailsLayout.setSpacing(false);
+
         if (userHasRole("ROLE_ADMIN") || userHasRole("ROLE_MANAGER")) {
             editButton.addClickListener(_ -> fireEvent(new EditEvent(this)));
             deleteButton.addClickListener(_ -> fireEvent(new DeleteEvent(this)));
-            add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton, editButton, deleteButton);
+            HorizontalLayout horizontalLayout = new HorizontalLayout(backButton, editButton, deleteButton);
+            add(title, detailsLayout, horizontalLayout);
         } else {
-            add(title, productId, productName, productStock, productDescription, productCreatedAt, backButton);
+            add(title, detailsLayout, backButton);
         }
     }
 
+    private HorizontalLayout labeledRow(String label, Span value) {
+        Span labelSpan = new Span(label);
+        labelSpan.getStyle().set("font-weight", "bold");
+        return new HorizontalLayout(labelSpan, value);
+    }
 
     public void setProductDetails(ProductResponseDto productResponseDto) {
         productId.setText(productResponseDto.getId().toString());
         productName.setText(productResponseDto.getName());
         productStock.setText(String.valueOf(productResponseDto.getStock()));
         productDescription.setText(productResponseDto.getDescription());
-        productCreatedAt.setText(productResponseDto.getCreatedAt().toString());
+        productCreatedAt.setText(productResponseDto.formattedDateString());
     }
 
     private boolean userHasRole(String role) {
@@ -58,21 +76,14 @@ public class ProductDetailCard extends VerticalLayout {
         return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority(role));
     }
 
-
     public static class BackEvent extends ComponentEvent<ProductDetailCard> {
-        public BackEvent(ProductDetailCard source) {
-            super(source, false);
-        }
+        public BackEvent(ProductDetailCard source) { super(source, false); }
     }
     public static class EditEvent extends ComponentEvent<ProductDetailCard> {
-        public EditEvent(ProductDetailCard source) {
-            super(source, false);
-        }
+        public EditEvent(ProductDetailCard source) { super(source, false); }
     }
     public static class DeleteEvent extends ComponentEvent<ProductDetailCard> {
-        public DeleteEvent(ProductDetailCard source) {
-            super(source, false);
-        }
+        public DeleteEvent(ProductDetailCard source) { super(source, false); }
     }
 
     public Registration addBackListener(ComponentEventListener<BackEvent> listener) {

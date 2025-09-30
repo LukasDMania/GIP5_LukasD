@@ -19,6 +19,7 @@ import be.ucll.util.NotificationUtil;
 import be.ucll.util.RoleConstants;
 import be.ucll.util.UserUtil;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import jakarta.annotation.security.RolesAllowed;
@@ -68,8 +69,13 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
         stockEditorForm = new StockEditorForm(currentProduct.getStock());
         stockAdjustmentGrid = new StockAdjustmentGrid();
 
-        VerticalLayout layout = new VerticalLayout(productDetailCard,  stockEditorForm, stockAdjustmentGrid);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(productDetailCard, stockEditorForm);
+        VerticalLayout layout = new VerticalLayout(horizontalLayout, stockAdjustmentGrid);
         layout.setSizeFull();
+        layout.setPadding(true);
+        layout.setSpacing(true);
+
+
         return layout;
     }
 

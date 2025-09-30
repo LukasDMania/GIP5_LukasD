@@ -61,15 +61,17 @@ public class InitialDataSetup {
 			entityManager.persist(user);
 			entityManager.persist(user1);
 
-			List<User> users = generateUsers(10, userRole, managerRole, adminRole);
+			List<User> users = generateUsers(40, userRole, managerRole, adminRole);
 			users.forEach(entityManager::persist);
 
 			List<Product> products = generateProducts(5000);
 			products.forEach(entityManager::persist);
 
-			List<StockAdjustment> adjustments = generateStockAdjustments(100, products, users);
-			adjustments.forEach(entityManager::persist);
+			//List<StockAdjustment> adjustments = generateStockAdjustments(10000, products, users);
+			//adjustments.forEach(entityManager::persist);
 
+			List<StockAdjustment> adjustments = generateStockAdjustmentsForEachProduct(50, products, users);
+			adjustments.forEach(entityManager::persist);
 			return null;
 		});
 	}
@@ -128,6 +130,28 @@ public class InitialDataSetup {
 			adj.setTimestamp(LocalDateTime.now().minusDays(random.nextInt(30)));
 
 			adjustments.add(adj);
+		}
+		return adjustments;
+	}
+
+	private List<StockAdjustment> generateStockAdjustmentsForEachProduct(int randomBound, List<Product> products, List<User> users) {
+		List<StockAdjustment> adjustments = new ArrayList<>();
+		for (Product product : products) {
+			int count = random.nextInt(randomBound + 1);
+			for (int j = 0; j < count; j++) {
+				StockAdjustment adj = new StockAdjustment();
+				adj.setProduct(product);
+				adj.setAdjustedBy(users.get(random.nextInt(users.size())));
+				adj.setTimestamp(LocalDateTime.now().minusDays(random.nextInt(30)));
+
+				int delta = random.nextInt(20) + 1;
+				if (random.nextBoolean()) delta = -delta;
+				adj.setDelta(delta);
+
+				adj.setStockAfter(product.getStock() + delta);
+
+				adjustments.add(adj);
+			}
 		}
 		return adjustments;
 	}

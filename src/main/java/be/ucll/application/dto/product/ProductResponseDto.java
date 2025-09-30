@@ -1,8 +1,13 @@
 package be.ucll.application.dto.product;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class ProductResponseDto {
+
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
     private Long id;
     private String name;
     private int stock;
@@ -50,5 +55,21 @@ public class ProductResponseDto {
     }
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+
+    @Override
+    public String toString() {
+        return "ProductResponseDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", stock=" + stock +
+                ", description='" + description + '\'' +
+                ", createdAt=" + (createdAt != null ? FORMATTER.format(createdAt) : "N/A") +
+                '}';
+    }
+
+    public String formattedDateString(){
+        return createdAt != null ? FORMATTER.format(createdAt) : "N/A";
     }
 }
