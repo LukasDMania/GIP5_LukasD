@@ -1,6 +1,7 @@
 package be.ucll.security;
 
 import be.ucll.ui.view.LoginView;
+import be.ucll.util.AppRoutes;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,7 @@ public class SecurityConfig extends VaadinWebSecurity {
                 .requestMatchers(new AntPathRequestMatcher("/VAADIN/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
+
         );
 
         super.configure(http);

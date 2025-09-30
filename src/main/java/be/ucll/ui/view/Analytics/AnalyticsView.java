@@ -56,7 +56,7 @@ public class AnalyticsView extends AppLayoutTemplate implements ViewContractLD {
 
         cardsGrid.add(
                 createCard("Products", productService.totalProducts()),
-                createCard("Total Stock", productService.totalStock()),
+                createCard("Stock", productService.totalStock()),
                 createCard("Users", productService.mostAdjustedProduct().getName())
         );
 

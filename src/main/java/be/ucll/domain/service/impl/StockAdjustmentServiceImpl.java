@@ -3,6 +3,7 @@ package be.ucll.domain.service.impl;
 import be.ucll.domain.model.Product;
 import be.ucll.domain.model.StockAdjustment;
 import be.ucll.domain.model.User;
+import be.ucll.domain.repository.ProductRepository;
 import be.ucll.domain.repository.StockAdjustmentRepository;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.StockAdjustmentService;
@@ -12,16 +13,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 
     private final StockAdjustmentRepository stockAdjustmentRepository;
+    private final ProductRepository productRepository;
     private final Logger LOG = LoggerFactory.getLogger(StockAdjustmentServiceImpl.class);
 
-    public StockAdjustmentServiceImpl(StockAdjustmentRepository stockAdjustmentRepository) {
+    public StockAdjustmentServiceImpl(StockAdjustmentRepository stockAdjustmentRepository, ProductRepository productRepository) {
         this.stockAdjustmentRepository = stockAdjustmentRepository;
+        this.productRepository = productRepository;
     }
 
     public StockAdjustment recordAdjustment(Product product, User user, int delta) {
@@ -42,5 +46,143 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
     @Override
     public List<StockAdjustment> findByProduct(Product product) {
         return stockAdjustmentRepository.findByProductOrderByTimestampDesc(product);
+    }
+
+    @Override
+    public int getTotalStockAdjustments() {
+        return (int) stockAdjustmentRepository.count();
+    }
+
+    @Override
+    public User getMostActiveUserByAdjustments() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(StockAdjustment::getAdjustedBy, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    @Override
+    public List<Product> getLowStockProducts(int threshold) {
+        return productRepository.findAll().stream()
+                .filter(p -> p.getStock() < threshold)
+                .sorted(Comparator.comparingInt(Product::getStock))
+                .toList();
+    }
+
+
+    @Override
+    public List<Product> getOverstockedProducts(int threshold) {
+        return productRepository.findAll().stream()
+                .filter(p -> p.getStock() > threshold)
+                .sorted(Comparator.comparingInt(Product::getStock).reversed())
+                .toList();
+    }
+
+    @Override
+    public Map<Product, Integer> getTotalDeltaPerProduct() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        StockAdjustment::getProduct,
+                        Collectors.summingInt(StockAdjustment::getDelta)
+                ));
+    }
+
+    @Override
+    public Map<Product, Long> getAdjustmentCountsPerProduct() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        StockAdjustment::getProduct,
+                        Collectors.counting()
+                ));
+    }
+
+    @Override
+    public Map<LocalDateTime, Integer> getStockOverTime() {
+        Map<LocalDateTime, Integer> result = new LinkedHashMap<>();
+        stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        adj -> adj.getTimestamp().withHour(0).withMinute(0).withSecond(0).withNano(0),
+                        TreeMap::new,
+                        Collectors.summingInt(StockAdjustment::getDelta)
+                ))
+                .forEach(result::put);
+        return result;
+    }
+
+    @Override
+    public Map<LocalDateTime, Long> getStockoutsOverTime() {
+        return stockAdjustmentRepository.findAll().stream()
+                .filter(adj -> adj.getStockAfter() == 0)
+                .collect(Collectors.groupingBy(
+                        adj -> adj.getTimestamp().withHour(0).withMinute(0).withSecond(0).withNano(0),
+                        TreeMap::new,
+                        Collectors.counting()
+                ));
+    }
+
+    @Override
+    public Map<LocalDateTime, Long> getAdjustmentsOverTime() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        adj -> adj.getTimestamp().withHour(0).withMinute(0).withSecond(0).withNano(0),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+    }
+
+    @Override
+    public Map<User, Integer> getTotalDeltaPerUser() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        StockAdjustment::getAdjustedBy,
+                        Collectors.summingInt(StockAdjustment::getDelta)
+                ));
+    }
+
+    @Override
+    public Map<User, Long> getAdjustmentCountsPerUser() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        StockAdjustment::getAdjustedBy,
+                        Collectors.counting()
+                ));
+    }
+
+    @Override
+    public List<Product> getTopProductsByStock(int limit) {
+        return productRepository.findAll().stream()
+                .sorted(Comparator.comparingInt(Product::getStock).reversed())
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
+    public List<Product> getTopProductsByPositiveDelta(int limit) {
+        return getTotalDeltaPerProduct().entrySet().stream()
+                .sorted(Map.Entry.<Product, Integer>comparingByValue().reversed())
+                .filter(e -> e.getValue() > 0)
+                .limit(limit)
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    @Override
+    public List<Product> getTopProductsByNegativeDelta(int limit) {
+        return getTotalDeltaPerProduct().entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .filter(e -> e.getValue() < 0)
+                .limit(limit)
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    @Override
+    public List<StockAdjustment> getRecentAdjustments(int limit) {
+        return stockAdjustmentRepository.findAll().stream()
+                .sorted(Comparator.comparing(StockAdjustment::getTimestamp).reversed())
+                .limit(limit)
+                .toList();
     }
 }

@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 @Route(AppRoutes.PRODUCT_ANALYTICSVIEW)
 @PageTitle("Products Analysis")
 @RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER})
-@CssImport("./styles/ProductsAnalyticsBody.css")
+@CssImport("./styles/productsanalyticsbody.css")
 public class ProductsAnalyticsView extends AppLayoutTemplate implements ViewContractLD {
 
     @Autowired

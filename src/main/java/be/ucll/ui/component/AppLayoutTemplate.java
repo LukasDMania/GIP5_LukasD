@@ -5,15 +5,21 @@ import be.ucll.ui.view.DashboardView;
 import be.ucll.util.RoleConstants;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.VaadinServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
+@CssImport("./styles/global.css")
 public class AppLayoutTemplate extends VerticalLayout {
     private final Div body = new Div();
     private final Div navLinks = new Div();
@@ -75,7 +81,18 @@ public class AppLayoutTemplate extends VerticalLayout {
         RouterLink homeLink = new RouterLink("Home", DashboardView.class);
         navLinks.add(homeLink);
 
-        header.add(logo, title, navLinks);
+        Button logoutButton = new Button("Logout", e -> {
+            SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+            logoutHandler.logout(
+                    VaadinServletRequest.getCurrent().getHttpServletRequest(),
+                    null,
+                    null
+            );
+            UI.getCurrent().getPage().setLocation("GIP5-0.1/login");
+        });
+
+
+        header.add(logo, title, navLinks, logoutButton);
         header.getStyle().set("display", "flex").set("align-items", "center");
 
         return header;

@@ -8,11 +8,15 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.*;
+import org.jfree.chart.renderer.category.AreaRenderer;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StackedBarRenderer;
+import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.general.PieDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -123,6 +127,54 @@ public class ChartUtil {
         return chart;
     }
 
+    public static JFreeChart createAreaChart(String title, String xAxis, String yAxis,
+                                             CategoryDataset dataset) {
+        JFreeChart chart = ChartFactory.createAreaChart(
+                title, xAxis, yAxis, dataset,
+                PlotOrientation.VERTICAL, true, true, false
+        );
+        styleAreaChart(chart);
+        return chart;
+    }
+
+    public static JFreeChart createStackedAreaChart(String title, String xAxis, String yAxis,
+                                                    CategoryDataset dataset) {
+        JFreeChart chart = ChartFactory.createStackedAreaChart(
+                title, xAxis, yAxis, dataset,
+                PlotOrientation.VERTICAL, true, true, false
+        );
+        styleAreaChart(chart);
+        return chart;
+    }
+
+    public static JFreeChart createScatterPlot(String title, String xAxis, String yAxis,
+                                               XYDataset dataset) {
+        JFreeChart chart = ChartFactory.createScatterPlot(
+                title, xAxis, yAxis, dataset,
+                PlotOrientation.VERTICAL, true, true, false
+        );
+        styleScatterChart(chart);
+        return chart;
+    }
+
+    public static JFreeChart createTimeSeriesChart(String title, String xAxis, String yAxis,
+                                                   XYDataset dataset) {
+        JFreeChart chart = ChartFactory.createTimeSeriesChart(
+                title, xAxis, yAxis, dataset,
+                true, true, false
+        );
+        styleTimeSeriesChart(chart);
+        return chart;
+    }
+
+    public static JFreeChart createDonutChart(String title, PieDataset dataset) {
+        JFreeChart chart = ChartFactory.createRingChart(
+                title, dataset, true, true, false
+        );
+        stylePieChart(chart);
+        return chart;
+    }
+
     private static void styleBarChart(JFreeChart chart) {
         CategoryPlot plot = chart.getCategoryPlot();
         BarRenderer renderer = (BarRenderer) plot.getRenderer();
@@ -156,10 +208,39 @@ public class ChartUtil {
         plot.setBackgroundPaint(ChartColor.WHITE);
         plot.setRangeGridlinePaint(ChartColor.GRAY);
 
-        //if dataset is time-based format x-axis as dates
         if (plot.getDomainAxis() instanceof NumberAxis) {
             plot.setDomainAxis(new DateAxis("Date"));
         }
+    }
+
+    private static void styleAreaChart(JFreeChart chart) {
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        AreaRenderer renderer = new AreaRenderer();
+        renderer.setSeriesPaint(0, new ChartColor(155, 187, 89)); // green tone
+        plot.setRenderer(renderer);
+        plot.setBackgroundPaint(ChartColor.WHITE);
+        plot.setRangeGridlinePaint(ChartColor.GRAY);
+    }
+
+    private static void styleScatterChart(JFreeChart chart) {
+        XYPlot plot = (XYPlot) chart.getPlot();
+        XYDotRenderer renderer = new XYDotRenderer();
+        renderer.setDotWidth(6);
+        renderer.setDotHeight(6);
+        renderer.setSeriesPaint(0, new ChartColor(192, 80, 77)); // red tone
+        plot.setRenderer(renderer);
+        plot.setBackgroundPaint(ChartColor.WHITE);
+        plot.setRangeGridlinePaint(ChartColor.GRAY);
+    }
+
+    private static void styleTimeSeriesChart(JFreeChart chart) {
+        XYPlot plot = chart.getXYPlot();
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
+        renderer.setSeriesPaint(0, new ChartColor(79, 129, 189));
+        plot.setRenderer(renderer);
+        plot.setBackgroundPaint(ChartColor.WHITE);
+        plot.setRangeGridlinePaint(ChartColor.GRAY);
+        plot.setDomainAxis(new DateAxis("Date"));
     }
 
 }

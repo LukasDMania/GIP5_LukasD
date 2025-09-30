@@ -279,9 +279,6 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.groupingBy(StockAdjustment::getProduct, Collectors.counting()));
     }
 
-    /* ============================
-       UTILITIES
-       ============================ */
 
     public List<String> autocompleteProductNames(String prefix) {
         List<Product> productList = productRepository.findNameByNameStartingWithIgnoreCase(prefix);
