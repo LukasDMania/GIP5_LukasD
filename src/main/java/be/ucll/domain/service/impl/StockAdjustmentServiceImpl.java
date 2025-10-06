@@ -185,4 +185,50 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
                 .limit(limit)
                 .toList();
     }
+
+    @Override
+    public int getTotalActiveUsers(){
+        return (int)stockAdjustmentRepository.findAll().stream()
+                .map(stockAdjustment -> stockAdjustment.getAdjustedBy().getId())
+                .distinct()
+                .count();
+    }
+
+    @Override
+    public float getAverageAdjustments(){
+        List<StockAdjustment> adjustments = stockAdjustmentRepository.findAll();
+
+        if (adjustments.isEmpty()) return 0;
+
+        float totalAdjustments = adjustments.size();
+        float uniqueUsers = adjustments.stream()
+                .map(adj -> adj.getAdjustedBy().getId())
+                .distinct()
+                .count();
+
+        if (uniqueUsers == 0) return 0;
+
+        return totalAdjustments / uniqueUsers;
+    }
+
+    @Override
+    public Map<String, Long> getAdjustmentsPerUser() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        adj -> adj.getAdjustedBy().getUsername(),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+    }
+
+    @Override
+    public Map<String, Double> getAverageAdjustmentSizePerUser() {
+        return stockAdjustmentRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        adj -> adj.getAdjustedBy().getUsername(),
+                        LinkedHashMap::new,
+                        Collectors.averagingInt(StockAdjustment::getDelta)
+                ));
+    }
+
 }

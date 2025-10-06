@@ -30,4 +30,9 @@ public interface StockAdjustmentService {
     List<Product> getTopProductsByPositiveDelta(int limit);
     List<Product> getTopProductsByNegativeDelta(int limit);
     List<StockAdjustment> getRecentAdjustments(int limit);
+
+    int getTotalActiveUsers();
+    float getAverageAdjustments();
+    Map<String, Long> getAdjustmentsPerUser();
+    Map<String, Double> getAverageAdjustmentSizePerUser();
 }

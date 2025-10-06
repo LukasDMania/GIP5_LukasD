@@ -33,4 +33,8 @@ public class UserServiceImpl implements UserDetailsService {
     public List<User> findAll() {
         return userRepository.findAll();
     }
+
+    public int userCount() {
+        return userRepository.findAll().size();
+    }
 }
