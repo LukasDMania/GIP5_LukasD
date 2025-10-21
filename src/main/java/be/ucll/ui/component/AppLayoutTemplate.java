@@ -90,6 +90,7 @@ public class AppLayoutTemplate extends VerticalLayout {
             );
             UI.getCurrent().getPage().setLocation("GIP5-0.1/login");
         });
+        logoutButton.getStyle().set("margin-left", "1rem");
 
 
         header.add(logo, title, navLinks, logoutButton);

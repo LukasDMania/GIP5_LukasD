@@ -1,6 +1,7 @@
 package be.ucll.ui.view.Analytics;
 
 import be.ucll.domain.service.ProductService;
+import be.ucll.domain.service.impl.UserServiceImpl;
 import be.ucll.ui.component.AppLayoutTemplate;
 import be.ucll.ui.view.ViewContractLD;
 import be.ucll.util.AppRoutes;
@@ -25,6 +26,8 @@ public class AnalyticsView extends AppLayoutTemplate implements ViewContractLD {
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private UserServiceImpl userService;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -57,7 +60,7 @@ public class AnalyticsView extends AppLayoutTemplate implements ViewContractLD {
         cardsGrid.add(
                 createCard("Products", productService.totalProducts()),
                 createCard("Stock", productService.totalStock()),
-                createCard("Users", productService.mostAdjustedProduct().getName())
+                createCard("Users", userService.userCount())
         );
 
         return cardsGrid;
