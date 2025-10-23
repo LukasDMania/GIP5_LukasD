@@ -20,21 +20,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Route(AppRoutes.ANALYTICSVIEW)
 @PageTitle("Analytics")
-@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER})
+@RolesAllowed({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_MANAGER})
 @CssImport("./styles/analyticsdashboard.css")
 public class AnalyticsView extends AppLayoutTemplate implements ViewContractLD {
 
     @Autowired
     private ProductService productService;
+
     @Autowired
     private UserServiceImpl userService;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-
         setBody(buildLayout());
-        subscribeEventListeners();;
+        subscribeEventListeners();
     }
 
     @Override
@@ -42,15 +42,12 @@ public class AnalyticsView extends AppLayoutTemplate implements ViewContractLD {
         VerticalLayout layout = new VerticalLayout();
         layout.setSizeFull();
         layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-
         layout.add(createKpiCardsGrid());
-
         return layout;
     }
 
     @Override
     public void subscribeEventListeners() {
-
     }
 
     private Component createKpiCardsGrid() {
@@ -70,7 +67,9 @@ public class AnalyticsView extends AppLayoutTemplate implements ViewContractLD {
         Div card = new Div();
         card.addClassName("kpi-card");
         card.add(new H3(title), new H1(value.toString()));
-        card.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("analytics/" + title.toLowerCase().replace(" ", "-"))));
+        card.addClickListener(e ->
+                getUI().ifPresent(ui -> ui.navigate("analytics/" + title.toLowerCase().replace(" ", "-")))
+        );
         return card;
     }
 }

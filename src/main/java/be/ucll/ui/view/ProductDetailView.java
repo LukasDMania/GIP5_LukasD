@@ -1,11 +1,9 @@
 package be.ucll.ui.view;
 
 import be.ucll.application.dto.product.ProductResponseDto;
-import be.ucll.application.dto.product.ProductUpdateRequestDto;
 import be.ucll.application.dto.stockadjustment.StockAdjustmentRequestDto;
 import be.ucll.application.dto.stockadjustment.StockAdjustmentResponseDto;
 import be.ucll.domain.model.StockAdjustment;
-import be.ucll.domain.model.User;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.StockAdjustmentService;
 import be.ucll.domain.service.impl.UserServiceImpl;
@@ -21,43 +19,44 @@ import be.ucll.util.UserUtil;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import java.util.List;
 import java.util.Optional;
 
 @Route(AppRoutes.PRODUCT_VIEW)
 @PageTitle("Product Details")
-@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER, RoleConstants.ROLE_USER})
+@RolesAllowed({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_MANAGER, RoleConstants.ROLE_USER})
 public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterObserver, ViewContractLD {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProductDetailView.class);
 
     @Autowired
     private UserServiceImpl userService;
+
     @Autowired
     private ProductService productService;
+
     @Autowired
-    private StockAdjustmentService  stockAdjustmentService;
+    private StockAdjustmentService stockAdjustmentService;
+
     @Autowired
     private UserUtil userUtil;
 
     private ProductDetailCard productDetailCard;
     private StockEditorForm stockEditorForm;
     private StockAdjustmentGrid stockAdjustmentGrid;
-
     private ProductResponseDto currentProduct;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-
         setBody(buildLayout());
         subscribeEventListeners();
         refreshData();
@@ -68,14 +67,11 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
         productDetailCard = new ProductDetailCard();
         stockEditorForm = new StockEditorForm(currentProduct.getStock());
         stockAdjustmentGrid = new StockAdjustmentGrid();
-
         HorizontalLayout horizontalLayout = new HorizontalLayout(productDetailCard, stockEditorForm);
         VerticalLayout layout = new VerticalLayout(horizontalLayout, stockAdjustmentGrid);
         layout.setSizeFull();
         layout.setPadding(true);
         layout.setSpacing(true);
-
-
         return layout;
     }
 
@@ -88,7 +84,7 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
                     userUtil.getCurrentUser().getUsername()
             );
             try {
-                StockAdjustmentResponseDto resp = productService.adjustStock(req);
+                productService.adjustStock(req);
                 refreshData();
                 NotificationUtil.showNotification("Stock updated", 2000);
             } catch (Exception ex) {
@@ -96,14 +92,8 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
             }
         });
 
-        productDetailCard.addBackListener(_ -> {
-            getUI().ifPresent(ui -> ui.navigate(AppRoutes.DASHBOARD_VIEW));
-        });
-
-        productDetailCard.addEditListener(_ -> {
-            getUI().ifPresent(ui -> ui.navigate("product/edit/" + currentProduct.getId()));
-        });
-
+        productDetailCard.addBackListener(_ -> getUI().ifPresent(ui -> ui.navigate(AppRoutes.DASHBOARD_VIEW)));
+        productDetailCard.addEditListener(_ -> getUI().ifPresent(ui -> ui.navigate("product/edit/" + currentProduct.getId())));
         productDetailCard.addDeleteListener(_ -> {
             productService.deleteProduct(currentProduct.getId());
             NotificationUtil.showNotification("Product deleted", 2000);
@@ -122,16 +112,9 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
 
         try {
             currentProduct = productService.findById(maybeId.get());
-        } catch (AccessDeniedException ex) {
-            LOG.warn("Access denied while loading product {}", maybeId.get(), ex);
-            NotificationUtil.showNotification("No Rights", 3000);
+        } catch (Exception ex) {
+            NotificationUtil.showNotification("Product not found or access denied.", 3000);
             event.forwardTo(AppRoutes.DASHBOARD_VIEW);
-            return;
-        } catch (ProductNotFoundException ex) {
-            LOG.warn("Product {} not found", maybeId.get(), ex);
-            NotificationUtil.showNotification("Product not found.", 3000);
-            event.forwardTo(AppRoutes.DASHBOARD_VIEW);
-            return;
         }
     }
 
@@ -139,8 +122,7 @@ public class ProductDetailView extends AppLayoutTemplate implements BeforeEnterO
         currentProduct = productService.findById(currentProduct.getId());
         stockEditorForm.setCurrentStock(currentProduct.getStock());
         productDetailCard.setProductDetails(currentProduct);
-
-        List<StockAdjustment> adjustmentsOfProduct = stockAdjustmentService.findByProduct(productService.getProductById(currentProduct.getId()));
-        stockAdjustmentGrid.setItems(adjustmentsOfProduct);
+        List<StockAdjustment> adjustments = stockAdjustmentService.findByProduct(productService.getProductById(currentProduct.getId()));
+        stockAdjustmentGrid.setItems(adjustments);
     }
 }

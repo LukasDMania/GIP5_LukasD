@@ -1,6 +1,5 @@
 package be.ucll.ui.view;
 
-
 import be.ucll.application.dto.LoginDto;
 import be.ucll.domain.service.LoginService;
 import be.ucll.ui.component.AppLayoutTemplate;
@@ -32,7 +31,6 @@ public class LoginView extends AppLayoutTemplate implements ViewContractLD {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-
         setBody(buildLayout());
         subscribeEventListeners();
     }
@@ -40,20 +38,16 @@ public class LoginView extends AppLayoutTemplate implements ViewContractLD {
     @Override
     public VerticalLayout buildLayout() {
         loginForm = new LoginForm();
-
         VerticalLayout layout = new VerticalLayout(loginForm);
         layout.setSizeFull();
         layout.setAlignItems(VerticalLayout.Alignment.CENTER);
         layout.setJustifyContentMode(VerticalLayout.JustifyContentMode.CENTER);
-
         return layout;
     }
 
     @Override
     public void subscribeEventListeners() {
-        loginForm.addLoginListener(loginEvent -> {
-            handleLogin(loginEvent.getLoginDto());
-        });
+        loginForm.addLoginListener(event -> handleLogin(event.getLoginDto()));
     }
 
     private void handleLogin(LoginDto loginDto) {

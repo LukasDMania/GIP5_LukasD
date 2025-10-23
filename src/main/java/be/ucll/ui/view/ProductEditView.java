@@ -12,34 +12,35 @@ import be.ucll.util.UserUtil;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Optional;
 
 @Route(AppRoutes.PRODUCT_EDIT_VIEW)
 @PageTitle("Product Edit")
-@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER})
+@RolesAllowed({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_MANAGER})
 public class ProductEditView extends AppLayoutTemplate implements BeforeEnterObserver, ViewContractLD {
 
-    private final Logger LOG = LoggerFactory.getLogger(ProductEditView.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProductEditView.class);
 
     @Autowired
     private ProductService productService;
+
     @Autowired
-    private UserUtil  userUtil;
+    private UserUtil userUtil;
 
     private ProductEditForm productEditForm;
-
     private ProductResponseDto currentProduct;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-
         setBody(buildLayout());
         subscribeEventListeners();
     }
@@ -48,18 +49,13 @@ public class ProductEditView extends AppLayoutTemplate implements BeforeEnterObs
     public VerticalLayout buildLayout() {
         productEditForm = new ProductEditForm();
         productEditForm.setProduct(currentProduct);
-
-        VerticalLayout layout = new VerticalLayout();
-        layout.add(productEditForm);
-
+        VerticalLayout layout = new VerticalLayout(productEditForm);
         return layout;
     }
 
     @Override
     public void subscribeEventListeners() {
-        productEditForm.addCancelListener(_ -> {
-            UI.getCurrent().navigate(DashboardView.class);
-        });
+        productEditForm.addCancelListener(_ -> UI.getCurrent().navigate(DashboardView.class));
         productEditForm.addSaveListener(event -> {
             currentProduct = productService.updateProduct(event.getProductUpdateRequestDto(), userUtil.getCurrentUser().getUsername());
             productEditForm.setProduct(currentProduct);
@@ -77,15 +73,14 @@ public class ProductEditView extends AppLayoutTemplate implements BeforeEnterObs
 
         try {
             currentProduct = productService.findById(maybeId.get());
-        } catch (AccessDeniedException ex) {
-            LOG.warn("Access denied while loading product {}", maybeId.get(), ex);
-            NotificationUtil.showNotification("No Rights", 3000);
-            event.forwardTo(AppRoutes.DASHBOARD_VIEW);
         } catch (ProductNotFoundException ex) {
             LOG.warn("Product {} not found", maybeId.get(), ex);
             NotificationUtil.showNotification("Product not found.", 3000);
             event.forwardTo(AppRoutes.DASHBOARD_VIEW);
+        } catch (Exception ex) {
+            LOG.warn("Access denied while loading product {}", maybeId.get(), ex);
+            NotificationUtil.showNotification("No Rights", 3000);
+            event.forwardTo(AppRoutes.DASHBOARD_VIEW);
         }
-
     }
 }

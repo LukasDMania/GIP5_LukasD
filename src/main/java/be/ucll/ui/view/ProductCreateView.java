@@ -16,11 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Route(AppRoutes.PRODUCT_CREATE_VIEW)
 @PageTitle("Create Product")
-@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER})
+@RolesAllowed({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_MANAGER})
 public class ProductCreateView extends AppLayoutTemplate implements ViewContractLD {
 
     @Autowired
     private ProductService productService;
+
     @Autowired
     private UserUtil userUtil;
 
@@ -29,7 +30,6 @@ public class ProductCreateView extends AppLayoutTemplate implements ViewContract
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-
         setBody(buildLayout());
         subscribeEventListeners();
     }
@@ -37,10 +37,7 @@ public class ProductCreateView extends AppLayoutTemplate implements ViewContract
     @Override
     public VerticalLayout buildLayout() {
         createProductForm = new CreateProductForm();
-
-        VerticalLayout layout = new VerticalLayout();
-        layout.add(createProductForm);
-
+        VerticalLayout layout = new VerticalLayout(createProductForm);
         return layout;
     }
 

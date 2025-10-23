@@ -1,6 +1,5 @@
 package be.ucll.ui.view.Analytics;
 
-import be.ucll.application.dto.product.ProductResponseDto;
 import be.ucll.domain.service.StockAdjustmentService;
 import be.ucll.domain.service.impl.UserServiceImpl;
 import be.ucll.ui.component.AppLayoutTemplate;
@@ -33,21 +32,21 @@ import java.util.stream.Collectors;
 
 @Route(AppRoutes.USER_ANALYTICSVIEW)
 @PageTitle("User Analysis")
-@RolesAllowed({RoleConstants.ROLE_ADMIN,RoleConstants.ROLE_MANAGER})
+@RolesAllowed({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_MANAGER})
 @CssImport("./styles/useranalyticsbody.css")
 public class UserAnalyticsView extends AppLayoutTemplate implements ViewContractLD {
 
     @Autowired
     private StockAdjustmentService stockAdjustmentService;
+
     @Autowired
     private UserServiceImpl userService;
-
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-
         setBody(buildLayout());
+        subscribeEventListeners();
     }
 
     @Override
@@ -55,11 +54,16 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
         VerticalLayout layout = new VerticalLayout();
         layout.setSizeFull();
         layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        layout.setClassName("UserAnalyticsBody");
 
         layout.add(buildKpiRow(), buildChartsRow());
-        layout.setClassName("UserAnalyticsBody");
         return layout;
     }
+
+    @Override
+    public void subscribeEventListeners() {
+    }
+
 
     private HorizontalLayout buildKpiRow() {
         HorizontalLayout row = new HorizontalLayout();
@@ -67,11 +71,13 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
         row.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         row.setSpacing(true);
 
+        row.add(
+                createKpiCard("Total Users", userService.userCount()),
+                createKpiCard("Active Users", stockAdjustmentService.getTotalActiveUsers()),
+                createKpiCard("Most Adjusting User", stockAdjustmentService.getMostActiveUserByAdjustments().getUsername()),
+                createKpiCard("Avg Adjustments/User", String.format("%.2f", stockAdjustmentService.getAverageAdjustments()))
+        );
 
-        row.add(createKpiCard("Total Users", userService.userCount()));
-        row.add(createKpiCard("Active Users", stockAdjustmentService.getTotalActiveUsers()));
-        row.add(createKpiCard("Most Adjusting User", stockAdjustmentService.getMostActiveUserByAdjustments().getUsername()));
-        row.add(createKpiCard("Avg Adjustments/User", String.format("%.2f", stockAdjustmentService.getAverageAdjustments())));
         return row;
     }
 
@@ -81,6 +87,7 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
         card.add(new H3(title), new H1(value.toString()));
         return card;
     }
+
     private Div createKpiCard(String title, Object value, ComponentEventListener<ClickEvent<Div>> clickListener) {
         Div card = new Div();
         card.addClassName("kpi-card");
@@ -100,7 +107,6 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
         layout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
 
         layout.add(
-                //add graphs
                 createAdjustmentsPerUserBarChart(),
                 createAverageAdjustmentSizePerUserScatterPlot()
         );
@@ -108,9 +114,8 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
         return layout;
     }
 
-    public JFreeChartComponent createAdjustmentsPerUserBarChart() {
+    private JFreeChartComponent createAdjustmentsPerUserBarChart() {
         Map<String, Long> adjustmentsPerUser = stockAdjustmentService.getAdjustmentsPerUser();
-
 
         Map<String, Number> datasetMap = adjustmentsPerUser.entrySet().stream()
                 .collect(Collectors.toMap(
@@ -119,7 +124,6 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
                         (a, b) -> a,
                         LinkedHashMap::new
                 ));
-
 
         JFreeChart chart = ChartUtil.createBarChart(
                 "Adjustments per User",
@@ -131,17 +135,16 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
         return new JFreeChartComponent(chart, 800, 400);
     }
 
-    public JFreeChartComponent createAverageAdjustmentSizePerUserScatterPlot() {
+    private JFreeChartComponent createAverageAdjustmentSizePerUserScatterPlot() {
         Map<String, Double> avgAdjustmentSize = stockAdjustmentService.getAverageAdjustmentSizePerUser();
 
         XYSeries series = new XYSeries("Avg Adjustment Size per User");
-        int i = 1;
+        int index = 1;
         for (Map.Entry<String, Double> entry : avgAdjustmentSize.entrySet()) {
-            series.add(i++, entry.getValue());
+            series.add(index++, entry.getValue());
         }
 
         XYSeriesCollection dataset = new XYSeriesCollection(series);
-
         JFreeChart chart = ChartUtil.createScatterPlot(
                 "Average Adjustment Size per User",
                 "User Index",
@@ -150,12 +153,5 @@ public class UserAnalyticsView extends AppLayoutTemplate implements ViewContract
         );
 
         return new JFreeChartComponent(chart, 800, 400);
-    }
-
-
-
-    @Override
-    public void subscribeEventListeners() {
-
     }
 }
