@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LoginServiceImpl implements LoginService {
 
-    private final Logger LOG = LoggerFactory.getLogger(LoginServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoginServiceImpl.class);
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -31,7 +31,6 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private ApplicationEventPublisher springEventPublisher;
 
-
     @Override
     public boolean authenticate(LoginDto loginDto) {
         try {
@@ -39,20 +38,19 @@ public class LoginServiceImpl implements LoginService {
                     new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
 
             Authentication authentication = authenticationManager.authenticate(authRequest);
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
             httpServletRequest.getSession().setAttribute(
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
 
             springEventPublisher.publishEvent(new LoginSuccessEvent());
-
             return true;
+
         } catch (AuthenticationException ex) {
             LOG.warn("Login failed for user '{}': {}", loginDto.getUsername(), ex.getMessage());
             springEventPublisher.publishEvent(new LoginFailedEvent());
             return false;
         }
     }
-
 }

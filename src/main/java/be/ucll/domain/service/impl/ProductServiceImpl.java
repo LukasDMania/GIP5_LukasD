@@ -1,40 +1,27 @@
 package be.ucll.domain.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import be.ucll.application.dto.SearchCriteriaDto;
-import be.ucll.application.dto.product.ProductRequestDto;
-import be.ucll.application.dto.product.ProductResponseDto;
-import be.ucll.application.dto.product.ProductUpdateRequestDto;
-import be.ucll.application.dto.stockadjustment.StockAdjustmentRequestDto;
-import be.ucll.application.dto.stockadjustment.StockAdjustmentResponseDto;
+import be.ucll.application.dto.product.*;
+import be.ucll.application.dto.stockadjustment.*;
 import be.ucll.application.events.SearchCompletedEvent;
 import be.ucll.application.mapper.product.ProductMapper;
-import be.ucll.domain.model.Product;
-import be.ucll.domain.model.StockAdjustment;
-import be.ucll.domain.model.User;
-import be.ucll.domain.repository.ProductRepository;
-import be.ucll.domain.repository.StockAdjustmentRepository;
-import be.ucll.domain.service.ProductService;
-import be.ucll.domain.service.StockAdjustmentService;
-import be.ucll.exception.DataIntegrityException;
-import be.ucll.exception.product.ProductAlreadyExistsException;
-import be.ucll.exception.product.ProductNotFoundException;
-import be.ucll.exception.product.ProductUpdateException;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import be.ucll.domain.model.*;
+import be.ucll.domain.repository.*;
+import be.ucll.domain.service.*;
+import be.ucll.exception.*;
+import be.ucll.exception.product.*;
+import jakarta.persistence.*;
 import jakarta.persistence.criteria.*;
+import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -63,8 +50,6 @@ public class ProductServiceImpl implements ProductService {
         this.stockAdjustmentRepository = stockAdjustmentRepository;
     }
 
-    //CRUD
-
     @PreAuthorize("hasAnyRole('MANAGER','USER')")
     @Transactional
     public List<ProductResponseDto> findAll() {
@@ -88,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ProductNotFoundException(id));
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @Transactional
     public ProductResponseDto createProduct(ProductRequestDto productRequest, String performedByUsername) {
         LOG.info("PRODUCTS createProduct({}, {})", performedByUsername, productRequest.getName());
@@ -108,7 +93,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @Transactional
     public ProductResponseDto updateProduct(ProductUpdateRequestDto productUpdateRequestDto, String performedByUsername) {
         LOG.info("Request to update product id={}", productUpdateRequestDto.getId());
@@ -144,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @Transactional
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
@@ -153,10 +138,7 @@ public class ProductServiceImpl implements ProductService {
         productRepository.deleteById(id);
     }
 
-    //Search criteria
-
     @PreAuthorize("hasAnyRole('MANAGER','USER')")
-    @Override
     public List<ProductResponseDto> searchProductsByCriteria(SearchCriteriaDto searchCriteriaDto) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Product> query = cb.createQuery(Product.class);
@@ -164,26 +146,18 @@ public class ProductServiceImpl implements ProductService {
 
         List<Predicate> predicates = new ArrayList<>();
 
-        if (searchCriteriaDto.getMinStock() > 0) {
+        if (searchCriteriaDto.getMinStock() > 0)
             predicates.add(cb.ge(productRoot.get("stock"), searchCriteriaDto.getMinStock()));
-        }
 
-        if (searchCriteriaDto.getMaxStock() > 0) {
+        if (searchCriteriaDto.getMaxStock() > 0)
             predicates.add(cb.le(productRoot.get("stock"), searchCriteriaDto.getMaxStock()));
-        }
 
-        if (searchCriteriaDto.getProductName() != null && !searchCriteriaDto.getProductName().isBlank()) {
-            predicates.add(
-                    cb.like(
-                            cb.lower(productRoot.get("name")),
-                            "%" + searchCriteriaDto.getProductName().toLowerCase() + "%"
-                    )
-            );
-        }
+        if (searchCriteriaDto.getProductName() != null && !searchCriteriaDto.getProductName().isBlank())
+            predicates.add(cb.like(cb.lower(productRoot.get("name")),
+                    "%" + searchCriteriaDto.getProductName().toLowerCase() + "%"));
 
-        if (searchCriteriaDto.getCreatedAfter() != null) {
+        if (searchCriteriaDto.getCreatedAfter() != null)
             predicates.add(cb.greaterThanOrEqualTo(productRoot.get("createdAt"), searchCriteriaDto.getCreatedAfter()));
-        }
 
         query.select(productRoot).where(predicates.toArray(new Predicate[0]));
         List<Product> resultList = em.createQuery(query).getResultList();
@@ -194,24 +168,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @PreAuthorize("hasAnyRole('MANAGER','USER')")
-    @Override
     public List<ProductResponseDto> searchProductsByCriteriaAndPublish(SearchCriteriaDto searchCriteriaDto) {
         List<ProductResponseDto> dtos = searchProductsByCriteria(searchCriteriaDto);
         springEventPublisher.publishEvent(new SearchCompletedEvent(dtos, searchCriteriaDto));
         return dtos;
     }
 
-    //Stock adjustments
-
-    @Override
     public StockAdjustmentResponseDto adjustStock(StockAdjustmentRequestDto productUpdateRequestDto) {
         Product existingProduct = productRepository.findById(productUpdateRequestDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(productUpdateRequestDto.getProductId()));
 
         int newStock = existingProduct.getStock() + productUpdateRequestDto.getDelta();
-        if (newStock < 0) {
+        if (newStock < 0)
             throw new ProductUpdateException("Stock cannot go negative");
-        }
+
         existingProduct.setStock(newStock);
         Product savedProduct = productRepository.save(existingProduct);
 
@@ -229,41 +199,35 @@ public class ProductServiceImpl implements ProductService {
         return responseDto;
     }
 
-    //Analytics
-
-    @Override
     public int totalProducts() {
         return (int) productRepository.count();
     }
 
-    @Override
     public int totalStock() {
         return productRepository.sumStock();
     }
 
-    @Override
     public ProductResponseDto mostAdjustedProduct() {
         Map<Product, Long> counts = stockAdjustmentRepository.findAll().stream()
                 .collect(Collectors.groupingBy(StockAdjustment::getProduct, Collectors.counting()));
 
-        Map.Entry<Product, Long> max = counts.entrySet().stream()
+        return counts.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
+                .map(e -> ProductMapper.toResponseDto(e.getKey()))
                 .orElse(null);
-
-        return max != null ? ProductMapper.toResponseDto(max.getKey()) : null;
     }
 
     public Map<LocalDateTime, Long> getProductCreationCountOverTime() {
         return productRepository.findAll().stream()
                 .collect(Collectors.groupingBy(
-                        product -> product.getCreatedAt().withHour(0).withMinute(0).withSecond(0).withNano(0),
+                        p -> p.getCreatedAt().withHour(0).withMinute(0).withSecond(0).withNano(0),
                         Collectors.counting()
                 ));
     }
 
     public List<Product> getTopProductsByStock(int limit) {
         return productRepository.findAll().stream()
-                .sorted((p1, p2) -> Integer.compare(p2.getStock(), p1.getStock()))
+                .sorted(Comparator.comparingInt(Product::getStock).reversed())
                 .limit(limit)
                 .toList();
     }
@@ -279,14 +243,9 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.groupingBy(StockAdjustment::getProduct, Collectors.counting()));
     }
 
-
     public List<String> autocompleteProductNames(String prefix) {
-        List<Product> productList = productRepository.findNameByNameStartingWithIgnoreCase(prefix);
-        List<String> produktNameList = new ArrayList<>();
-        for (Product product : productList) {
-            produktNameList.add(product.getName());
-        }
-        return produktNameList;
+        return productRepository.findNameByNameStartingWithIgnoreCase(prefix).stream()
+                .map(Product::getName)
+                .toList();
     }
 }
-

@@ -1,19 +1,16 @@
 package be.ucll.domain.service.impl;
 
+import java.util.List;
 import be.ucll.domain.model.User;
 import be.ucll.domain.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class UserServiceImpl implements UserDetailsService {
-
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -35,6 +32,6 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public int userCount() {
-        return userRepository.findAll().size();
+        return (int) userRepository.count();
     }
 }

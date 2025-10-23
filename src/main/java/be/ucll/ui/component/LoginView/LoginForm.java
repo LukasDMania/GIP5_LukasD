@@ -13,6 +13,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.shared.Registration;
 
 public class LoginForm extends VerticalLayout {
+
     private final Binder<LoginDto> binder = new Binder<>(LoginDto.class);
     private final LoginDto loginDto = new LoginDto();
 
@@ -57,7 +58,6 @@ public class LoginForm extends VerticalLayout {
                 .bind(LoginDto::getPassword, LoginDto::setPassword);
 
         binder.addStatusChangeListener(_ -> loginButton.setEnabled(binder.isValid()));
-
         binder.addValueChangeListener(_ -> errorLabel.setText(""));
     }
 
@@ -65,7 +65,6 @@ public class LoginForm extends VerticalLayout {
         errorLabel.setText(message);
     }
 
-    //COmponent events
     public static class LoginEvent extends ComponentEvent<LoginForm> {
         private final LoginDto loginDto;
         public LoginEvent(LoginForm source, LoginDto loginDto) {

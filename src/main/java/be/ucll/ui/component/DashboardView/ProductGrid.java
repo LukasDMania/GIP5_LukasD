@@ -13,6 +13,10 @@ public class ProductGrid extends Grid<ProductResponseDto> {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public ProductGrid() {
+        configureGrid();
+    }
+
+    private void configureGrid() {
         removeAllColumns();
 
         addColumn(ProductResponseDto::getId).setHeader("Product Id");
@@ -24,15 +28,15 @@ public class ProductGrid extends Grid<ProductResponseDto> {
                 : "")
                 .setHeader("Created At");
 
-
-        addComponentColumn(productResponseDto -> {
-            Button detailButton = new Button("Details", event -> {
-                getUI().ifPresent(ui -> ui.navigate("product/" + productResponseDto.getId()));
-            });
-            return detailButton;
-        }).setHeader("Details");
+        addComponentColumn(this::createDetailButton).setHeader("Details");
 
         setWidthFull();
         setItems(Collections.emptyList());
+    }
+
+    private Button createDetailButton(ProductResponseDto productResponseDto) {
+        return new Button("Details", event ->
+                getUI().ifPresent(ui -> ui.navigate("product/" + productResponseDto.getId()))
+        );
     }
 }

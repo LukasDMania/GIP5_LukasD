@@ -18,18 +18,16 @@ import com.vaadin.flow.shared.Registration;
 public class CreateProductForm extends VerticalLayout {
 
     private final Binder<ProductRequestDto> binder = new Binder<>(ProductRequestDto.class);
-
     private final TextField nameField = new TextField("Name");
     private final IntegerField stockField = new IntegerField("Initial Stock");
     private final TextArea descriptionField = new TextArea("Description");
-
     private final Span errorLabel = new Span();
 
     public CreateProductForm() {
-        buildForm();
+        configureForm();
     }
 
-    private void buildForm() {
+    private void configureForm() {
         binder.forField(nameField)
                 .asRequired("Name is required")
                 .bind(ProductRequestDto::getName, ProductRequestDto::setName);
@@ -45,10 +43,8 @@ public class CreateProductForm extends VerticalLayout {
         binder.forField(descriptionField)
                 .bind(ProductRequestDto::getDescription, ProductRequestDto::setDescription);
 
-        //Buttons
         Button saveButton = new Button("Save", _ -> saveProduct());
         Button clearButton = new Button("Clear", _ -> clearForm());
-
         errorLabel.getStyle().set("color", "red");
 
         FormLayout formLayout = new FormLayout(nameField, stockField, descriptionField, saveButton, clearButton);
@@ -56,7 +52,6 @@ public class CreateProductForm extends VerticalLayout {
 
         VerticalLayout wrapper = new VerticalLayout(formLayout, errorLabel);
         wrapper.setAlignItems(FlexComponent.Alignment.START);
-
         add(wrapper);
     }
 
@@ -81,15 +76,12 @@ public class CreateProductForm extends VerticalLayout {
         binder.readBean(dto);
     }
 
-    // Events
     public static class SaveEvent extends ComponentEvent<CreateProductForm> {
         private final ProductRequestDto product;
-
         public SaveEvent(CreateProductForm source, ProductRequestDto product) {
             super(source, false);
             this.product = product;
         }
-
         public ProductRequestDto getProduct() {
             return product;
         }
@@ -102,8 +94,7 @@ public class CreateProductForm extends VerticalLayout {
     }
 
     public <T extends ComponentEvent<?>> Registration addListener(
-            Class<T> eventType,
-            ComponentEventListener<T> listener) {
+            Class<T> eventType, ComponentEventListener<T> listener) {
         return getEventBus().addListener(eventType, listener);
     }
 }

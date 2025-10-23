@@ -3,7 +3,6 @@ package be.ucll.ui.component.DashboardView;
 import be.ucll.application.dto.SearchCriteriaDto;
 import be.ucll.domain.service.ProductService;
 import be.ucll.domain.service.impl.SearchHistoryService;
-import be.ucll.util.UserUtil;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
@@ -32,7 +31,7 @@ public class SearchForm extends VerticalLayout {
     private static final Logger LOG = LoggerFactory.getLogger(SearchForm.class);
 
     private final Binder<SearchCriteriaDto> binder = new Binder<>(SearchCriteriaDto.class);
-    ComboBox<SearchCriteriaDto> historyComboBox = new ComboBox<>("Recente Zoekopdrachten");
+    private final ComboBox<SearchCriteriaDto> historyComboBox = new ComboBox<>("Recente Zoekopdrachten");
 
     private final ProductService productService;
     private final SearchHistoryService searchHistoryService;
@@ -40,7 +39,6 @@ public class SearchForm extends VerticalLayout {
     public SearchForm(ProductService productService, SearchHistoryService searchHistoryHandler) {
         this.productService = productService;
         this.searchHistoryService = searchHistoryHandler;
-
         buildSearchForm();
     }
 
@@ -51,7 +49,6 @@ public class SearchForm extends VerticalLayout {
         ComboBox<String> productName = new ComboBox<>("Product name");
         productName.setAllowCustomValue(true);
 
-        //TODO: retry pagination instead of calling full dataset
         productName.setItems(query -> {
             String filter = query.getFilter().orElse("");
             return productService.autocompleteProductNames(filter)
@@ -71,33 +68,25 @@ public class SearchForm extends VerticalLayout {
             }
         });
 
-
         binder.forField(minAmount)
-                .withConverter(
-                        doubleValue -> doubleValue == null ? 0 : doubleValue.intValue(),
-                        intValue -> (double) intValue
-                )
+                .withConverter(doubleValue -> doubleValue == null ? 0 : doubleValue.intValue(),
+                        intValue -> (double) intValue)
                 .withValidator(val -> val >= 0, "Minimum stock must be positive")
                 .bind(SearchCriteriaDto::getMinStock, SearchCriteriaDto::setMinStock);
 
         binder.forField(maxAmount)
-                .withConverter(
-                        doubleValue -> doubleValue == null ? 0 : doubleValue.intValue(),
-                        intValue -> (double) intValue
-                )
+                .withConverter(doubleValue -> doubleValue == null ? 0 : doubleValue.intValue(),
+                        intValue -> (double) intValue)
                 .withValidator(val -> val >= 0, "Maximum stock must be positive")
                 .bind(SearchCriteriaDto::getMaxStock, SearchCriteriaDto::setMaxStock);
 
         binder.forField(createdAfter)
-                .withConverter(
-                        localDate -> localDate == null ? null : LocalDateTime.of(localDate, LocalTime.MIN),
-                        localDateTime -> localDateTime == null ? null : localDateTime.toLocalDate()
-                )
+                .withConverter(localDate -> localDate == null ? null : LocalDateTime.of(localDate, LocalTime.MIN),
+                        localDateTime -> localDateTime == null ? null : localDateTime.toLocalDate())
                 .bind(SearchCriteriaDto::getCreatedAfter, SearchCriteriaDto::setCreatedAfter);
 
         binder.forField(productName)
                 .bind(SearchCriteriaDto::getProductName, SearchCriteriaDto::setProductName);
-
 
         Button clearButton = new Button("Clear", _ -> {
             binder.readBean(new SearchCriteriaDto());
@@ -108,7 +97,6 @@ public class SearchForm extends VerticalLayout {
         Button searchButton = new Button("Search", _ -> {
             LOG.info("User triggered search");
             SearchCriteriaDto tempCriteria = new SearchCriteriaDto();
-
             try {
                 binder.writeBean(tempCriteria);
                 if (!tempCriteria.hasAtLeastOneCriteria()) {
@@ -116,7 +104,6 @@ public class SearchForm extends VerticalLayout {
                     errorLabel.setText("Please enter at least one search criterion.");
                     return;
                 }
-                //TODO: fire search event
                 try {
                     LOG.info("Firing SearchRequest Event");
                     fireEvent(new SearchEvent(this, tempCriteria));
@@ -124,7 +111,6 @@ public class SearchForm extends VerticalLayout {
                 } catch (Exception e) {
                     LOG.error("Error publishing SearchRequestedEvent", e);
                 }
-
                 errorLabel.setText("");
             } catch (ValidationException e) {
                 LOG.warn("Search form validation failed", e);
@@ -185,12 +171,12 @@ public class SearchForm extends VerticalLayout {
             super(source, false);
         }
     }
+
     public static class CreateProductEvent extends ComponentEvent<SearchForm> {
-        public  CreateProductEvent(SearchForm source) {
+        public CreateProductEvent(SearchForm source) {
             super(source, false);
         }
     }
-
 
     public <T extends ComponentEvent<?>> Registration addListener(
             Class<T> eventType, ComponentEventListener<T> listener) {

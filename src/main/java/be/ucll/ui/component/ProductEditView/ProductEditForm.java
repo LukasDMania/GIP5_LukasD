@@ -15,18 +15,21 @@ import com.vaadin.flow.shared.Registration;
 
 public class ProductEditForm extends VerticalLayout {
 
-    private TextField nameField = new TextField("Name");
-    private IntegerField stockField = new IntegerField("Stock");
-    private TextArea descriptionField = new TextArea("Description");
-    private Button saveButton = new Button("Save");
-    private Button cancelButton = new Button("Cancel");
+    private final TextField nameField = new TextField("Name");
+    private final IntegerField stockField = new IntegerField("Stock");
+    private final TextArea descriptionField = new TextArea("Description");
+    private final Button saveButton = new Button("Save");
+    private final Button cancelButton = new Button("Cancel");
 
     private Long productId;
 
     public ProductEditForm() {
+        configureForm();
+    }
+
+    private void configureForm() {
         FormLayout formLayout = new FormLayout();
         stockField.setMin(0);
-
         formLayout.add(nameField, stockField, descriptionField);
         add(formLayout, saveButton, cancelButton);
 
@@ -86,6 +89,7 @@ public class ProductEditForm extends VerticalLayout {
     public Registration addSaveListener(ComponentEventListener<SaveEvent> listener) {
         return addListener(SaveEvent.class, listener);
     }
+
     public Registration addCancelListener(ComponentEventListener<CancelEvent> listener) {
         return addListener(CancelEvent.class, listener);
     }

@@ -15,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-
 public class ProductDetailCard extends VerticalLayout {
 
     private final Logger LOG = LoggerFactory.getLogger(ProductDetailCard.class);
@@ -32,9 +31,11 @@ public class ProductDetailCard extends VerticalLayout {
     public ProductDetailCard() {
         setSizeFull();
         setSpacing(true);
+        configureLayout();
+    }
 
+    private void configureLayout() {
         H2 title = new H2("Product Details");
-
         backButton.addClickListener(e -> fireEvent(new BackEvent(this)));
 
         VerticalLayout detailsLayout = new VerticalLayout(
@@ -79,9 +80,11 @@ public class ProductDetailCard extends VerticalLayout {
     public static class BackEvent extends ComponentEvent<ProductDetailCard> {
         public BackEvent(ProductDetailCard source) { super(source, false); }
     }
+
     public static class EditEvent extends ComponentEvent<ProductDetailCard> {
         public EditEvent(ProductDetailCard source) { super(source, false); }
     }
+
     public static class DeleteEvent extends ComponentEvent<ProductDetailCard> {
         public DeleteEvent(ProductDetailCard source) { super(source, false); }
     }
@@ -89,9 +92,11 @@ public class ProductDetailCard extends VerticalLayout {
     public Registration addBackListener(ComponentEventListener<BackEvent> listener) {
         return addListener(BackEvent.class, listener);
     }
+
     public Registration addEditListener(ComponentEventListener<EditEvent> listener) {
         return addListener(EditEvent.class, listener);
     }
+
     public Registration addDeleteListener(ComponentEventListener<DeleteEvent> listener) {
         return addListener(DeleteEvent.class, listener);
     }

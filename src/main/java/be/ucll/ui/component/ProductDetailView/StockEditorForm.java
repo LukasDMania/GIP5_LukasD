@@ -11,12 +11,14 @@ import com.vaadin.flow.shared.Registration;
 public class StockEditorForm extends VerticalLayout {
 
     private final IntegerField amountField = new IntegerField("Stock Amount");
-
     private int currentStock;
 
     public StockEditorForm(int currentStock) {
         setCurrentStock(currentStock);
+        configureForm();
+    }
 
+    private void configureForm() {
         amountField.setLabel("Stock Amount");
         amountField.setMin(0);
 
@@ -64,7 +66,6 @@ public class StockEditorForm extends VerticalLayout {
                 return false;
             }
         }
-
         amountField.setInvalid(false);
         return true;
     }
@@ -72,6 +73,7 @@ public class StockEditorForm extends VerticalLayout {
     public int getCurrentStock() {
         return currentStock;
     }
+
     public void setCurrentStock(int currentStock) {
         this.currentStock = currentStock;
     }
@@ -82,7 +84,9 @@ public class StockEditorForm extends VerticalLayout {
             super(source, false);
             this.delta = delta;
         }
-        public int getDelta() { return delta; }
+        public int getDelta() {
+            return delta;
+        }
     }
 
     public Registration addStockAdjustListener(ComponentEventListener<StockAdjustEvent> listener) {
